@@ -1,13 +1,13 @@
 'use client';
 
-import styles from './CustomerList.module.css';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useCustomers, useDeleteCustomer } from '@/lib/hooks';
-import { Button, EmptyState, StatusBadge, ConfirmModal } from '@/components/ui';
+import { Button, EmptyState, ConfirmDialog } from '@/components/ui';
 import { CustomerModal } from './CustomerModal';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerListItem } from '@/types';
+import { Loader2, Users, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 
 export function CustomerList() {
     const [search, setSearch] = useState('');
@@ -37,8 +37,8 @@ export function CustomerList() {
 
     if (isLoading) {
         return (
-            <div className={styles.loading}>
-                <div className={styles.spinner} />
+            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Loading customers...</span>
             </div>
         );
@@ -46,9 +46,9 @@ export function CustomerList() {
 
     if (error) {
         return (
-            <div className={styles.error}>
-                <h3>Error loading customers</h3>
-                <p>Please try again later.</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 text-center">
+                <h3 className="text-lg font-semibold text-destructive">Error loading customers</h3>
+                <p className="text-muted-foreground">Please try again later.</p>
             </div>
         );
     }
@@ -56,84 +56,85 @@ export function CustomerList() {
     const customers = data?.data || [];
 
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
-                <div className={styles.headerContent}>
-                    <h1 className={styles.title}>Customers</h1>
-                    <p className={styles.subtitle}>Manage your customer database</p>
+        <div className="space-y-6">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Customers</h1>
+                    <p className="text-muted-foreground mt-1">Manage your customer database</p>
                 </div>
                 <Link href="/customers/new">
-                    <Button>+ Add Customer</Button>
+                    <Button>
+                        <Plus className="h-4 w-4" />
+                        Add Customer
+                    </Button>
                 </Link>
             </header>
 
-            <div className={styles.toolbar}>
+            <div className="flex gap-4">
                 <input
                     type="text"
                     placeholder="Search customers..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className={styles.searchInput}
+                    className="flex h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
             </div>
 
             {customers.length === 0 ? (
                 <EmptyState
-                    icon="👥"
+                    icon={Users}
                     title="No customers yet"
                     description="Create your first customer to start sending invoices."
-                    actionLabel="Add Customer"
-                    onAction={() => window.location.href = '/customers/new'}
+                    action={{
+                        label: "Add Customer",
+                        onClick: () => window.location.href = '/customers/new'
+                    }}
                 />
             ) : (
-                <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
+                <div className="bg-card rounded-lg border border-border overflow-hidden">
+                    <table className="w-full">
+                        <thead className="bg-muted/50">
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Receivable</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Phone</th>
+                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Receivable</th>
+                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-border">
                             {customers.map((customer) => (
-                                <tr key={customer.id}>
-                                    <td className={styles.nameCell}>
-                                        <Link href={`/customers/${customer.id}`}>
+                                <tr key={customer.id} className="hover:bg-muted/30 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <Link href={`/customers/${customer.id}`} className="text-sm font-medium text-primary hover:underline">
                                             {customer.name}
                                         </Link>
                                     </td>
-                                    <td>{customer.email}</td>
-                                    <td>{customer.phone || '-'}</td>
-                                    <td className={styles.amountCell}>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{customer.email}</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{customer.phone || '-'}</td>
+                                    <td className="px-4 py-3 text-sm text-right font-medium">
                                         {formatCurrency(customer.total_receivable)}
                                     </td>
-                                    <td>
-                                        <StatusBadge status={customer.status} />
-                                    </td>
-                                    <td>
-                                        <div className={styles.actions}>
+                                    <td className="px-4 py-3">
+                                        <div className="flex justify-end gap-1">
                                             <Link href={`/customers/${customer.id}`}>
-                                                <Button variant="ghost" size="sm">
-                                                    View
+                                                <Button variant="ghost" size="icon">
+                                                    <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
                                                 onClick={() => handleEdit(customer)}
                                             >
-                                                Edit
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
                                                 onClick={() => setDeletingCustomer(customer)}
                                             >
-                                                Delete
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </td>
@@ -150,12 +151,12 @@ export function CustomerList() {
                 customer={editingCustomer}
             />
 
-            <ConfirmModal
-                isOpen={!!deletingCustomer}
-                onClose={() => setDeletingCustomer(null)}
+            <ConfirmDialog
+                open={!!deletingCustomer}
+                onOpenChange={(open) => !open && setDeletingCustomer(null)}
                 onConfirm={handleDelete}
                 title="Delete Customer"
-                message={`Are you sure you want to delete "${deletingCustomer?.name}"? This will also delete all associated invoices.`}
+                description={`Are you sure you want to delete "${deletingCustomer?.name}"? This will also delete all associated invoices.`}
                 confirmText="Delete"
                 loading={deleteCustomer.isPending}
             />

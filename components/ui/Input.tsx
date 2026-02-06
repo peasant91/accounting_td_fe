@@ -1,35 +1,43 @@
-import styles from './Input.module.css';
-import { InputHTMLAttributes, forwardRef } from 'react';
+import * as React from "react"
+import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+    extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
     hint?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, hint, className = '', id, ...props }, ref) => {
-        const inputId = id || label?.toLowerCase().replace(/\s/g, '-');
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+    ({ className, type, label, error, hint, id, ...props }, ref) => {
+        const generatedId = React.useId();
+        const inputId = id || generatedId;
 
         return (
-            <div className={styles.wrapper}>
-                {label && (
-                    <label htmlFor={inputId} className={styles.label}>
-                        {label}
-                        {props.required && <span className={styles.required}>*</span>}
-                    </label>
-                )}
+            <div className="space-y-2">
+                {label && <Label htmlFor={inputId}>{label}</Label>}
                 <input
+                    type={type}
+                    className={cn(
+                        "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                        error && "border-destructive focus-visible:ring-destructive",
+                        className
+                    )}
                     ref={ref}
                     id={inputId}
-                    className={`${styles.input} ${error ? styles.error : ''} ${className}`}
                     {...props}
                 />
-                {hint && !error && <span className={styles.hint}>{hint}</span>}
-                {error && <span className={styles.errorText}>{error}</span>}
+                {hint && !error && (
+                    <p className="text-sm text-muted-foreground">{hint}</p>
+                )}
+                {error && (
+                    <p className="text-sm font-medium text-destructive">{error}</p>
+                )}
             </div>
-        );
+        )
     }
-);
+)
+Input.displayName = "Input"
 
-Input.displayName = 'Input';
+export { Input }

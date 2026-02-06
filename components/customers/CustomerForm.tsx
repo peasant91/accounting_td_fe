@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Button, Input } from '@/components/ui';
+import { Label } from '@/components/ui/label';
 import { CustomerFormData } from '@/types';
-import styles from './CustomerList.module.css'; // Reusing list module styles for now or could reuse modal styles if suitable
 
 interface CustomerFormProps {
     initialData?: CustomerFormData;
@@ -79,8 +79,8 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
     };
 
     return (
-        <form onSubmit={handleSubmit} className={styles.formContainer}>
-            <div className={styles.formGrid}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
                 <Input
                     label="Name"
                     name="name"
@@ -110,7 +110,7 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     value={formData.address_line_1 || ''}
                     onChange={handleChange}
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="grid grid-cols-2 gap-4">
                     <Input
                         label="City"
                         name="city"
@@ -124,7 +124,7 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                         onChange={handleChange}
                     />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="grid grid-cols-2 gap-4">
                     <Input
                         label="Postal Code"
                         name="postal_code"
@@ -144,29 +144,22 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     value={formData.tax_id || ''}
                     onChange={handleChange}
                 />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Notes</label>
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
                     <textarea
+                        id="notes"
                         name="notes"
                         value={formData.notes || ''}
                         onChange={handleChange}
-                        className={styles.textarea} // Assuming styles exist or will be added
                         rows={3}
-                        style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '0.375rem',
-                            border: '1px solid var(--color-border)',
-                            background: 'var(--color-bg-primary)',
-                            color: 'var(--color-text-primary)'
-                        }}
+                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                 </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+            <div className="flex justify-end gap-3">
                 {onCancel && (
-                    <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
+                    <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
                         Cancel
                     </Button>
                 )}

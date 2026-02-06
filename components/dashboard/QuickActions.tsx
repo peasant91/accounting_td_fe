@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui';
-import styles from './Dashboard.module.css';
+import { Plus } from 'lucide-react';
 
 export function QuickActions() {
     return (
-        <div className={styles.quickActions}>
+        <div className="flex gap-3">
             <Link href="/customers/new">
-                <Button variant="primary">
-                    <span className={styles.actionIcon}>+</span> New Customer
+                <Button>
+                    <Plus className="h-4 w-4" />
+                    New Customer
                 </Button>
             </Link>
             <Link href="/invoices/new">
-                <Button variant="primary">
-                    <span className={styles.actionIcon}>+</span> New Invoice
+                <Button>
+                    <Plus className="h-4 w-4" />
+                    New Invoice
                 </Button>
             </Link>
         </div>

@@ -1,4 +1,3 @@
-import styles from './Dashboard.module.css';
 import { formatRelativeTime } from '@/lib/utils';
 import { DashboardSummary } from '@/types';
 
@@ -8,25 +7,25 @@ interface RecentActivityProps {
 
 export function RecentActivity({ activities }: RecentActivityProps) {
     return (
-        <section className={styles.activitySection}>
-            <h2 className={styles.sectionTitle}>Recent Activity</h2>
-            <div className={styles.activityList}>
+        <section className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Recent Activity</h2>
+            <div className="bg-card rounded-lg border border-border divide-y divide-border">
                 {activities && activities.length > 0 ? (
                     activities.map((activity) => (
-                        <div key={activity.id} className={styles.activityItem}>
-                            <div className={styles.activityDot} />
-                            <div className={styles.activityContent}>
-                                <p className={styles.activityDescription}>
+                        <div key={activity.id} className="flex items-start gap-3 p-4">
+                            <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm text-foreground">
                                     {activity.description}
                                 </p>
-                                <span className={styles.activityTime}>
+                                <span className="text-xs text-muted-foreground">
                                     {formatRelativeTime(activity.created_at)}
                                 </span>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className={styles.noActivity}>
+                    <div className="p-8 text-center text-muted-foreground">
                         <p>No recent activity</p>
                     </div>
                 )}

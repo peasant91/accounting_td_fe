@@ -1,7 +1,11 @@
 'use client';
 
-import styles from './CustomerModal.module.css';
-import { Modal } from '@/components/ui';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { useUpdateCustomer } from '@/lib/hooks';
 import { CustomerFormData, CustomerListItem } from '@/types';
 import { CustomerForm } from './CustomerForm';
@@ -21,12 +25,6 @@ export function CustomerModal({ isOpen, onClose, customer }: CustomerModalProps)
         name: customer.name,
         email: customer.email,
         phone: customer.phone || '',
-        // Map other fields if they exist in CustomerListItem or fetch detail if needed.
-        // For list item editing, we might only have limited data unless we fetch.
-        // Assuming CustomerListItem has enough or we accept partial updates.
-        // NOTE: If CustomerListItem doesn't have address, tax_id etc, we might show empty fields or need to fetch.
-        // For now, mapping what we have. Ideally "Edit" should fetch full details or pass full object.
-        // Given previous file content, it seemed it was only setting name/email/phone from props.
     };
 
     const handleSubmit = async (data: CustomerFormData) => {
@@ -35,19 +33,19 @@ export function CustomerModal({ isOpen, onClose, customer }: CustomerModalProps)
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Edit Customer"
-            footer={null} // Form has its own buttons
-        >
-            <CustomerForm
-                initialData={initialData}
-                onSubmit={handleSubmit}
-                isLoading={updateCustomer.isPending}
-                onCancel={onClose}
-                submitLabel="Save Changes"
-            />
-        </Modal>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Edit Customer</DialogTitle>
+                </DialogHeader>
+                <CustomerForm
+                    initialData={initialData}
+                    onSubmit={handleSubmit}
+                    isLoading={updateCustomer.isPending}
+                    onCancel={onClose}
+                    submitLabel="Save Changes"
+                />
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -1,12 +1,12 @@
 'use client';
 
-import styles from './InvoiceForm.module.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Label } from '@/components/ui';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice } from '@/lib/hooks';
 import { InvoiceFormData, InvoiceItemFormData } from '@/types';
-import { getTodayString } from '@/lib/utils';
+import { getTodayString, formatCurrency } from '@/lib/utils';
+import { Loader2, Plus, X } from 'lucide-react';
 
 const emptyItem: InvoiceItemFormData = {
     description: '',
@@ -61,9 +61,13 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     const isSubmitting = createInvoice.isPending || updateInvoice.isPending;
 
     if (isEditMode && isLoadingInvoice) {
-        return <div className={styles.loading}>Loading invoice data...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading invoice data...</span>
+            </div>
+        );
     }
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -144,10 +148,10 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                 await createInvoice.mutateAsync(formData);
                 router.push('/invoices');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to save invoice:', error);
-            if (error?.errors) {
-                const apiErrors = error.errors as Record<string, string[]>;
+            if (error && typeof error === 'object' && 'errors' in error) {
+                const apiErrors = (error as { errors: Record<string, string[]> }).errors;
                 const newErrors: Record<string, string> = {};
 
                 Object.keys(apiErrors).forEach((key) => {
@@ -165,27 +169,27 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     };
 
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
-                <h1 className={styles.title}>{isEditMode ? 'Edit Invoice' : 'Create Invoice'}</h1>
-                <p className={styles.subtitle}>
+        <div className="space-y-6">
+            <header>
+                <h1 className="text-3xl font-bold text-foreground">{isEditMode ? 'Edit Invoice' : 'Create Invoice'}</h1>
+                <p className="text-muted-foreground mt-1">
                     {isEditMode ? 'Update invoice details' : 'Create a new invoice for your customer'}
                 </p>
             </header>
 
-            <form className={styles.form} onSubmit={handleSubmit}>
-                {/* ... existing form content ... */}
-                {/* ... existing form content ... */}
-                <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Invoice Details</h2>
-                    <div className={styles.grid}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.label}>Customer *</label>
+            <form className="space-y-8" onSubmit={handleSubmit}>
+                {/* Invoice Details Section */}
+                <div className="bg-card rounded-lg border border-border p-6 space-y-6">
+                    <h2 className="text-lg font-semibold text-foreground">Invoice Details</h2>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="customer_id">Customer *</Label>
                             <select
+                                id="customer_id"
                                 name="customer_id"
                                 value={formData.customer_id}
                                 onChange={handleChange}
-                                className={styles.select}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <option value={0}>Select a customer</option>
                                 {customers.map((customer) => (
@@ -194,10 +198,10 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     </option>
                                 ))}
                             </select>
-                            {errors.customer_id && <span className={styles.error}>{errors.customer_id}</span>}
+                            {errors.customer_id && <p className="text-sm text-destructive">{errors.customer_id}</p>}
                         </div>
 
-                        <div className={styles.row}>
+                        <div className="grid grid-cols-2 gap-4">
                             <Input
                                 label="Invoice Date"
                                 name="invoice_date"
@@ -229,38 +233,43 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                     </div>
                 </div>
 
-                <div className={styles.section}>
-                    <div className={styles.sectionHeader}>
-                        <h2 className={styles.sectionTitle}>Line Items</h2>
+                {/* Line Items Section */}
+                <div className="bg-card rounded-lg border border-border p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-foreground">Line Items</h2>
                         <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-                            + Add Item
+                            <Plus className="h-4 w-4" />
+                            Add Item
                         </Button>
                     </div>
-                    {errors.items && <span className={styles.error}>{errors.items}</span>}
+                    {errors.items && <p className="text-sm text-destructive">{errors.items}</p>}
 
-                    <div className={styles.itemsTable}>
-                        <div className={styles.itemsHeader}>
-                            <span>Description</span>
-                            <span>Qty</span>
-                            <span>Unit Price</span>
-                            <span>Amount</span>
-                            <span></span>
+                    <div className="space-y-4">
+                        {/* Header */}
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                            <span className="col-span-5">Description</span>
+                            <span className="col-span-2 text-right">Qty</span>
+                            <span className="col-span-2 text-right">Unit Price</span>
+                            <span className="col-span-2 text-right">Amount</span>
+                            <span className="col-span-1"></span>
                         </div>
+
+                        {/* Items */}
                         {formData.items.map((item, index) => (
-                            <div key={index} className={styles.itemRow}>
+                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
                                 <input
                                     type="text"
                                     placeholder="Item description"
                                     value={item.description}
                                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                                    className={styles.itemInput}
+                                    className="col-span-5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
                                 <input
                                     type="number"
                                     min="1"
                                     value={item.quantity}
                                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                    className={styles.itemInputSmall}
+                                    className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
                                 <input
                                     type="number"
@@ -268,54 +277,64 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     step="0.01"
                                     value={item.unit_price}
                                     onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
-                                    className={styles.itemInputSmall}
+                                    className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
-                                <span className={styles.itemAmount}>
-                                    ${(item.quantity * item.unit_price).toFixed(2)}
+                                <span className="col-span-2 text-right font-medium">
+                                    {formatCurrency(item.quantity * item.unit_price)}
                                 </span>
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="sm"
+                                    size="icon"
                                     onClick={() => removeItem(index)}
                                     disabled={formData.items.length === 1}
+                                    className="col-span-1"
                                 >
-                                    ✕
+                                    <X className="h-4 w-4" />
                                 </Button>
                             </div>
                         ))}
                     </div>
 
-                    <div className={styles.totals}>
-                        <div className={styles.totalRow}>
-                            <span>Subtotal:</span>
-                            <span>${calculateSubtotal().toFixed(2)}</span>
-                        </div>
-                        <div className={styles.totalRow}>
-                            <span>Tax ({formData.tax_rate}%):</span>
-                            <span>${calculateTax().toFixed(2)}</span>
-                        </div>
-                        <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-                            <span>Total:</span>
-                            <span>${calculateTotal().toFixed(2)}</span>
+                    {/* Totals */}
+                    <div className="flex justify-end border-t border-border pt-4">
+                        <div className="w-full max-w-xs space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span>{formatCurrency(calculateSubtotal())}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Tax ({formData.tax_rate}%):</span>
+                                <span>{formatCurrency(calculateTax())}</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
+                                <span>Total:</span>
+                                <span className="text-primary">{formatCurrency(calculateTotal())}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Notes</h2>
-                    <textarea
-                        name="notes"
-                        value={formData.notes || ''}
-                        onChange={handleChange}
-                        placeholder="Add any notes for the customer..."
-                        className={styles.textarea}
-                        rows={3}
-                    />
+                {/* Notes Section */}
+                <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground">Notes</h2>
+                    <div className="space-y-2">
+                        <Label htmlFor="notes">Notes for Customer</Label>
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            value={formData.notes || ''}
+                            onChange={handleChange}
+                            placeholder="Add any notes for the customer..."
+                            rows={3}
+                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
                 </div>
 
-                <div className={styles.actions}>
-                    <Button type="button" variant="ghost" onClick={() => router.back()}>
+                {/* Actions */}
+                <div className="flex justify-end gap-3">
+                    <Button type="button" variant="outline" onClick={() => router.back()}>
                         Cancel
                     </Button>
                     <Button type="submit" loading={isSubmitting}>

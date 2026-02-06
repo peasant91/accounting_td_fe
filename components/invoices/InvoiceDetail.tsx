@@ -1,12 +1,12 @@
 'use client';
 
-import styles from './InvoiceDetail.module.css';
 import { useRouter } from 'next/navigation';
 import { Button, StatusBadge } from '@/components/ui';
 import { useInvoice, useDeleteInvoice } from '@/lib/hooks';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal } from '@/components/invoices';
+import { Loader2, ArrowLeft, Printer } from 'lucide-react';
 
 interface InvoiceDetailProps {
     invoiceId: number;
@@ -39,21 +39,26 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     };
 
     if (isLoading) {
-        return <div className={styles.loading}>Loading invoice details...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading invoice details...</span>
+            </div>
+        );
     }
 
     if (error || !invoice) {
         return (
-            <div className={styles.error}>
-                <h2>Error loading invoice</h2>
-                <p>Could not find invoice with ID {invoiceId}</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+                <h2 className="text-lg font-semibold text-destructive">Error loading invoice</h2>
+                <p className="text-muted-foreground">Could not find invoice with ID {invoiceId}</p>
                 <Button onClick={() => router.push('/invoices')}>Back to Invoices</Button>
             </div>
         );
     }
 
     return (
-        <div className={styles.container}>
+        <div className="space-y-6">
             {/* Modals */}
             <SendInvoiceModal
                 isOpen={isSendModalOpen}
@@ -77,132 +82,140 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             />
 
             {/* Header with Actions */}
-            <header className={styles.header}>
-                <div className={styles.headerLeft}>
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" onClick={() => router.push('/invoices')}>
-                        ← Back
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
                     </Button>
-                    <div className={styles.titleRow}>
-                        <h1 className={styles.title}>{invoice.invoice_number}</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground">{invoice.invoice_number}</h1>
                         <StatusBadge status={invoice.status} />
                     </div>
                 </div>
 
-                <div className={styles.actions}>
+                <div className="flex flex-wrap gap-2">
                     {invoice.status === 'draft' && (
                         <>
-                            <Button variant="ghost" onClick={handleDelete} className={styles.deleteBtn}>Delete</Button>
+                            <Button variant="ghost" onClick={handleDelete}>Delete</Button>
                             <Button variant="secondary" onClick={handleEdit}>Edit</Button>
-                            <Button variant="primary" onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
+                            <Button onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
                         </>
                     )}
                     {invoice.status === 'sent' && (
                         <>
-                            <Button variant="secondary" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
+                            <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
                             <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Resend Info</Button>
-                            <Button variant="primary" onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
+                            <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
                         </>
                     )}
                     {invoice.status === 'overdue' && (
                         <>
-                            <Button variant="secondary" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
+                            <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
                             <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Send Reminder</Button>
-                            <Button variant="primary" onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
+                            <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
                         </>
                     )}
                     {invoice.status === 'paid' && (
                         <Button variant="secondary" onClick={() => console.log('View Receipt')}>View Receipt</Button>
                     )}
-                    <Button variant="ghost" onClick={() => window.print()}>Print / PDF</Button>
+                    <Button variant="ghost" onClick={() => window.print()}>
+                        <Printer className="h-4 w-4" />
+                        Print / PDF
+                    </Button>
                 </div>
             </header>
 
             {/* Invoice Content */}
-            <div className={styles.content}>
+            <div className="bg-card rounded-lg border border-border p-6 space-y-8">
                 {/* Top Info Grid */}
-                <div className={styles.infoGrid}>
-                    <div className={styles.infoSection}>
-                        <h3 className={styles.label}>Customer</h3>
-                        <div className={styles.customerInfo}>
-                            <p className={styles.customerName}>{invoice.customer.name}</p>
-                            <p>{invoice.customer.email}</p>
-                            {invoice.customer.address_line_1 && <p>{invoice.customer.address_line_1}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground">Customer</h3>
+                        <div>
+                            <p className="font-semibold text-foreground">{invoice.customer.name}</p>
+                            <p className="text-sm text-muted-foreground">{invoice.customer.email}</p>
+                            {invoice.customer.address_line_1 && (
+                                <p className="text-sm text-muted-foreground">{invoice.customer.address_line_1}</p>
+                            )}
                         </div>
                     </div>
 
-                    <div className={styles.infoSection}>
-                        <div className={styles.dateRow}>
-                            <div>
-                                <h3 className={styles.label}>Invoice Date</h3>
-                                <p>{formatDate(invoice.invoice_date)}</p>
-                            </div>
-                            <div>
-                                <h3 className={styles.label}>Due Date</h3>
-                                <p>{formatDate(invoice.due_date)}</p>
-                            </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <h3 className="text-sm font-medium text-muted-foreground">Invoice Date</h3>
+                            <p className="text-foreground">{formatDate(invoice.invoice_date)}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-sm font-medium text-muted-foreground">Due Date</h3>
+                            <p className="text-foreground">{formatDate(invoice.due_date)}</p>
                         </div>
                     </div>
 
-                    <div className={styles.infoSection}>
-                        <h3 className={styles.label}>Amount Due</h3>
-                        <p className={styles.totalAmount}>{formatCurrency(invoice.total)}</p>
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground">Amount Due</h3>
+                        <p className="text-3xl font-bold text-primary">{formatCurrency(invoice.total)}</p>
                     </div>
                 </div>
 
                 {/* Line Items */}
-                <div className={styles.itemsSection}>
-                    <h2 className={styles.sectionTitle}>Items</h2>
-                    <table className={styles.itemsTable}>
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th className={styles.textRight}>Qty</th>
-                                <th className={styles.textRight}>Unit Price</th>
-                                <th className={styles.textRight}>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {invoice.items.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.description}</td>
-                                    <td className={styles.textRight}>{item.quantity}</td>
-                                    <td className={styles.textRight}>{formatCurrency(item.unit_price)}</td>
-                                    <td className={styles.textRight}>{formatCurrency(item.amount)}</td>
+                <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground">Items</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="border-b border-border">
+                                <tr>
+                                    <th className="py-3 text-left text-sm font-medium text-muted-foreground">Description</th>
+                                    <th className="py-3 text-right text-sm font-medium text-muted-foreground">Qty</th>
+                                    <th className="py-3 text-right text-sm font-medium text-muted-foreground">Unit Price</th>
+                                    <th className="py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {invoice.items.map((item) => (
+                                    <tr key={item.id}>
+                                        <td className="py-3 text-foreground">{item.description}</td>
+                                        <td className="py-3 text-right text-muted-foreground">{item.quantity}</td>
+                                        <td className="py-3 text-right text-muted-foreground">{formatCurrency(item.unit_price)}</td>
+                                        <td className="py-3 text-right font-medium text-foreground">{formatCurrency(item.amount)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Totals */}
-                <div className={styles.totalsSection}>
-                    <div className={styles.totalRow}>
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(invoice.subtotal)}</span>
-                    </div>
-                    <div className={styles.totalRow}>
-                        <span>Tax ({invoice.tax_rate}%)</span>
-                        <span>{formatCurrency(invoice.tax_amount)}</span>
-                    </div>
-                    <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-                        <span>Total</span>
-                        <span>{formatCurrency(invoice.total)}</span>
+                <div className="flex justify-end">
+                    <div className="w-full max-w-xs space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="text-foreground">{formatCurrency(invoice.subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Tax ({invoice.tax_rate}%)</span>
+                            <span className="text-foreground">{formatCurrency(invoice.tax_amount)}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
+                            <span>Total</span>
+                            <span className="text-primary">{formatCurrency(invoice.total)}</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Notes */}
                 {(invoice.notes || invoice.internal_notes) && (
-                    <div className={styles.notesSection}>
+                    <div className="space-y-4 border-t border-border pt-6">
                         {invoice.notes && (
-                            <div className={styles.noteBlock}>
-                                <h3 className={styles.label}>Notes for Customer</h3>
-                                <p>{invoice.notes}</p>
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-medium text-muted-foreground">Notes for Customer</h3>
+                                <p className="text-foreground">{invoice.notes}</p>
                             </div>
                         )}
                         {invoice.internal_notes && (
-                            <div className={styles.noteBlock}>
-                                <h3 className={styles.label}>Internal Notes</h3>
-                                <p className={styles.internalNote}>{invoice.internal_notes}</p>
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-medium text-muted-foreground">Internal Notes</h3>
+                                <p className="text-muted-foreground italic">{invoice.internal_notes}</p>
                             </div>
                         )}
                     </div>

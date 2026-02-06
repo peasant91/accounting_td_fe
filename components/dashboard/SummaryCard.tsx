@@ -1,37 +1,42 @@
 import Link from 'next/link';
-import styles from './Dashboard.module.css';
+import { cn } from '@/lib/utils';
 
 interface SummaryCardProps {
     title: string;
     value: string | number;
     subValue?: string;
     icon: React.ReactNode;
-    accentClass: string;
+    variant?: 'default';
     href?: string;
 }
 
-export function SummaryCard({ title, value, subValue, icon, accentClass, href }: SummaryCardProps) {
+export function SummaryCard({ title, value, subValue, icon, href }: SummaryCardProps) {
     const CardContent = (
         <>
-            <div className={styles.statIcon}>{icon}</div>
-            <div className={styles.statContent}>
-                <span className={styles.statLabel}>{title}</span>
-                <span className={styles.statValue}>{value}</span>
-                {subValue && <span className={styles.statSubvalue}>{subValue}</span>}
+            <div className="text-3xl">{icon}</div>
+            <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground">{title}</span>
+                <span className="text-2xl font-bold text-foreground">{value}</span>
+                {subValue && <span className="text-sm text-muted-foreground">{subValue}</span>}
             </div>
         </>
     );
 
+    const cardClasses = cn(
+        "flex items-center gap-4 p-6 bg-card rounded-lg border border-border shadow-sm transition-all",
+        href && "hover:shadow-md hover:border-primary/50 cursor-pointer"
+    );
+
     if (href) {
         return (
-            <Link href={href} className={`${styles.statCard} ${accentClass} ${styles.clickable}`}>
+            <Link href={href} className={cardClasses}>
                 {CardContent}
             </Link>
         );
     }
 
     return (
-        <div className={`${styles.statCard} ${accentClass}`}>
+        <div className={cardClasses}>
             {CardContent}
         </div>
     );

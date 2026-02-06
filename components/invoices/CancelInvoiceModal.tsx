@@ -1,8 +1,15 @@
 'use client';
 
-import styles from './InvoiceModals.module.css';
 import { useState } from 'react';
-import { Button, Modal } from '@/components/ui';
+import { Button, Label } from '@/components/ui';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { useCancelInvoice } from '@/lib/hooks';
 
 interface CancelInvoiceModalProps {
@@ -37,34 +44,37 @@ export function CancelInvoiceModal({
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={`Cancel Invoice ${invoiceNumber}`}
-            size="sm"
-        >
-            <form className={styles.form} onSubmit={handleSubmit}>
-                <p>Are you sure you want to cancel this invoice? This action cannot be undone.</p>
-                <div>
-                    <label className={styles.label}>Cancellation Reason</label>
-                    <textarea
-                        className={styles.textarea}
-                        value={cancellationReason}
-                        onChange={(e) => setCancellationReason(e.target.value)}
-                        placeholder="Why is this invoice being cancelled?"
-                        required
-                        rows={3}
-                    />
-                </div>
-                <div className={styles.modalFooter}>
-                    <Button type="button" variant="ghost" onClick={onClose}>
-                        Keep Invoice
-                    </Button>
-                    <Button type="submit" variant="danger" loading={cancelInvoice.isPending}>
-                        Cancel Invoice
-                    </Button>
-                </div>
-            </form>
-        </Modal>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Cancel Invoice {invoiceNumber}</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to cancel this invoice? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="cancellation_reason">Cancellation Reason</Label>
+                        <textarea
+                            id="cancellation_reason"
+                            value={cancellationReason}
+                            onChange={(e) => setCancellationReason(e.target.value)}
+                            placeholder="Why is this invoice being cancelled?"
+                            required
+                            rows={3}
+                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            Keep Invoice
+                        </Button>
+                        <Button type="submit" variant="destructive" loading={cancelInvoice.isPending}>
+                            Cancel Invoice
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }

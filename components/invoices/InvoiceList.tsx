@@ -1,12 +1,12 @@
 'use client';
 
-import styles from './InvoiceList.module.css';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useInvoices, useDeleteInvoice } from '@/lib/hooks';
-import { Button, EmptyState, StatusBadge, ConfirmModal } from '@/components/ui';
+import { Button, EmptyState, StatusBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { InvoiceListItem, InvoiceStatus } from '@/types';
+import { Loader2, FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
 export function InvoiceList() {
     const [search, setSearch] = useState('');
@@ -28,8 +28,8 @@ export function InvoiceList() {
 
     if (isLoading) {
         return (
-            <div className={styles.loading}>
-                <div className={styles.spinner} />
+            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Loading invoices...</span>
             </div>
         );
@@ -37,9 +37,9 @@ export function InvoiceList() {
 
     if (error) {
         return (
-            <div className={styles.error}>
-                <h3>Error loading invoices</h3>
-                <p>Please try again later.</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 text-center">
+                <h3 className="text-lg font-semibold text-destructive">Error loading invoices</h3>
+                <p className="text-muted-foreground">Please try again later.</p>
             </div>
         );
     }
@@ -47,29 +47,32 @@ export function InvoiceList() {
     const invoices = data?.data || [];
 
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
-                <div className={styles.headerContent}>
-                    <h1 className={styles.title}>Invoices</h1>
-                    <p className={styles.subtitle}>Manage and track your invoices</p>
+        <div className="space-y-6">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Invoices</h1>
+                    <p className="text-muted-foreground mt-1">Manage and track your invoices</p>
                 </div>
                 <Link href="/invoices/new">
-                    <Button>+ Create Invoice</Button>
+                    <Button>
+                        <Plus className="h-4 w-4" />
+                        Create Invoice
+                    </Button>
                 </Link>
             </header>
 
-            <div className={styles.toolbar}>
+            <div className="flex flex-col sm:flex-row gap-4">
                 <input
                     type="text"
                     placeholder="Search invoices..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className={styles.searchInput}
+                    className="flex h-10 w-full sm:max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as InvoiceStatus | '')}
-                    className={styles.filterSelect}
+                    className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <option value="">All Status</option>
                     <option value="draft">Draft</option>
@@ -82,55 +85,59 @@ export function InvoiceList() {
 
             {invoices.length === 0 ? (
                 <EmptyState
-                    icon="📄"
+                    icon={FileText}
                     title="No invoices yet"
                     description="Create your first invoice to start billing your customers."
-                    actionLabel="Create Invoice"
-                    onAction={() => window.location.href = '/invoices/new'}
+                    action={{
+                        label: "Create Invoice",
+                        onClick: () => window.location.href = '/invoices/new'
+                    }}
                 />
             ) : (
-                <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
+                <div className="bg-card rounded-lg border border-border overflow-hidden">
+                    <table className="w-full">
+                        <thead className="bg-muted/50">
                             <tr>
-                                <th>Invoice #</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Due Date</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice #</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Due Date</th>
+                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
+                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-border">
                             {invoices.map((invoice) => (
-                                <tr key={invoice.id}>
-                                    <td className={styles.invoiceNumber}>
-                                        <Link href={`/invoices/${invoice.id}`}>
+                                <tr key={invoice.id} className="hover:bg-muted/30 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <Link href={`/invoices/${invoice.id}`} className="text-sm font-medium text-primary hover:underline">
                                             {invoice.invoice_number}
                                         </Link>
                                     </td>
-                                    <td>{invoice.customer.name}</td>
-                                    <td>{formatDate(invoice.invoice_date)}</td>
-                                    <td>{formatDate(invoice.due_date)}</td>
-                                    <td className={styles.amountCell}>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{invoice.customer.name}</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(invoice.invoice_date)}</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(invoice.due_date)}</td>
+                                    <td className="px-4 py-3 text-sm text-right font-medium">
                                         {formatCurrency(invoice.total)}
                                     </td>
-                                    <td>
+                                    <td className="px-4 py-3 text-center">
                                         <StatusBadge status={invoice.status} />
                                     </td>
-                                    <td>
-                                        <div className={styles.actions}>
+                                    <td className="px-4 py-3">
+                                        <div className="flex justify-end gap-1">
                                             <Link href={`/invoices/${invoice.id}`}>
-                                                <Button variant="ghost" size="sm">View</Button>
+                                                <Button variant="ghost" size="icon">
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
                                             </Link>
                                             {invoice.status === 'draft' && (
                                                 <Button
                                                     variant="ghost"
-                                                    size="sm"
+                                                    size="icon"
                                                     onClick={() => setDeletingInvoice(invoice)}
                                                 >
-                                                    Delete
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             )}
                                         </div>
@@ -142,12 +149,12 @@ export function InvoiceList() {
                 </div>
             )}
 
-            <ConfirmModal
-                isOpen={!!deletingInvoice}
-                onClose={() => setDeletingInvoice(null)}
+            <ConfirmDialog
+                open={!!deletingInvoice}
+                onOpenChange={(open) => !open && setDeletingInvoice(null)}
                 onConfirm={handleDelete}
                 title="Delete Invoice"
-                message={`Are you sure you want to delete invoice "${deletingInvoice?.invoice_number}"?`}
+                description={`Are you sure you want to delete invoice "${deletingInvoice?.invoice_number}"?`}
                 confirmText="Delete"
                 loading={deleteInvoice.isPending}
             />

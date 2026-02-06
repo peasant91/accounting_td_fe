@@ -1,8 +1,14 @@
 'use client';
 
-import styles from './InvoiceModals.module.css';
 import { useState, useEffect } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Label } from '@/components/ui';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { useSendInvoice } from '@/lib/hooks';
 
 interface SendInvoiceModalProps {
@@ -53,46 +59,48 @@ export function SendInvoiceModal({
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={`Send Invoice ${invoiceNumber}`}
-            size="md"
-        >
-            <form className={styles.form} onSubmit={handleSubmit}>
-                <Input
-                    label="To"
-                    name="recipient_email"
-                    type="email"
-                    value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
-                    required
-                />
-                <Input
-                    label="Subject"
-                    name="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    required
-                />
-                <div>
-                    <label className={styles.label}>Message</label>
-                    <textarea
-                        className={styles.textarea}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Send Invoice {invoiceNumber}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input
+                        label="To"
+                        name="recipient_email"
+                        type="email"
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
                         required
                     />
-                </div>
-                <div className={styles.modalFooter}>
-                    <Button type="button" variant="ghost" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" loading={sendInvoice.isPending}>
-                        Send Invoice
-                    </Button>
-                </div>
-            </form>
-        </Modal>
+                    <Input
+                        label="Subject"
+                        name="subject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        required
+                    />
+                    <div className="space-y-2">
+                        <Label htmlFor="message">Message</Label>
+                        <textarea
+                            id="message"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            required
+                            rows={6}
+                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" loading={sendInvoice.isPending}>
+                            Send Invoice
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
