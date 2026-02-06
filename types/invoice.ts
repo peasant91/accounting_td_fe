@@ -18,6 +18,7 @@ export interface Invoice {
     invoice_number: string;
     customer_id: number;
     customer: Customer;
+    currency: string;
     invoice_date: string;
     due_date: string;
     subtotal: number;

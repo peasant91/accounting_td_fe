@@ -5,8 +5,10 @@ import { Invoice } from './invoice';
 export interface Customer {
     id: number;
     name: string;
+    company_name: string | null;
     email: string;
     phone: string | null;
+    currency: string;
     address_line_1: string | null;
     address_line_2: string | null;
     city: string | null;
@@ -27,16 +29,20 @@ export type CustomerStatus = 'active' | 'inactive';
 export interface CustomerListItem {
     id: number;
     name: string;
+    company_name: string | null;
     email: string;
     phone: string | null;
+    currency: string;
     total_receivable: number;
     status: CustomerStatus;
 }
 
 export interface CustomerFormData {
     name: string;
+    company_name?: string;
     email: string;
     phone?: string;
+    currency?: string;
     address_line_1?: string;
     address_line_2?: string;
     city?: string;

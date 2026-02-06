@@ -68,7 +68,7 @@ export function MarkAsPaidModal({
                         name="payment_date"
                         type="date"
                         value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentDate(e.target.value)}
                         required
                     />
 
@@ -77,7 +77,7 @@ export function MarkAsPaidModal({
                         <select
                             id="payment_method"
                             value={paymentMethod}
-                            onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPaymentMethod(e.target.value as PaymentMethod)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             <option value="">Select Method</option>
@@ -92,7 +92,7 @@ export function MarkAsPaidModal({
                         label="Reference / Transaction ID"
                         name="payment_reference"
                         value={paymentReference}
-                        onChange={(e) => setPaymentReference(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentReference(e.target.value)}
                         placeholder="e.g. TR-12345"
                     />
 
@@ -101,7 +101,7 @@ export function MarkAsPaidModal({
                         <textarea
                             id="notes"
                             value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
                             placeholder="Optional payment notes..."
                             rows={3}
                             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

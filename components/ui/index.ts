@@ -29,3 +29,4 @@ export {
 export { ConfirmDialog } from './confirm-dialog'
 export { StatusBadge } from './status-badge'
 export { EmptyState } from './empty-state'
+export * from './select'

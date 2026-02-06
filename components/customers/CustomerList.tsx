@@ -4,35 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useCustomers, useDeleteCustomer } from '@/lib/hooks';
 import { Button, EmptyState, ConfirmDialog } from '@/components/ui';
-import { CustomerModal } from './CustomerModal';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerListItem } from '@/types';
 import { Loader2, Users, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 
 export function CustomerList() {
     const [search, setSearch] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingCustomer, setEditingCustomer] = useState<CustomerListItem | null>(null);
     const [deletingCustomer, setDeletingCustomer] = useState<CustomerListItem | null>(null);
 
     const { data, isLoading, error } = useCustomers({ search });
     const deleteCustomer = useDeleteCustomer();
-
-    const handleEdit = (customer: CustomerListItem) => {
-        setEditingCustomer(customer);
-        setIsModalOpen(true);
-    };
 
     const handleDelete = async () => {
         if (deletingCustomer) {
             await deleteCustomer.mutateAsync(deletingCustomer.id);
             setDeletingCustomer(null);
         }
-    };
-
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        setEditingCustomer(null);
     };
 
     if (isLoading) {
@@ -107,8 +94,11 @@ export function CustomerList() {
                                 <tr key={customer.id} className="hover:bg-muted/30 transition-colors">
                                     <td className="px-4 py-3">
                                         <Link href={`/customers/${customer.id}`} className="text-sm font-medium text-primary hover:underline">
-                                            {customer.name}
+                                            {customer.company_name || customer.name}
                                         </Link>
+                                        {customer.company_name && (
+                                            <div className="text-xs text-muted-foreground">{customer.name}</div>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{customer.email}</td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{customer.phone || '-'}</td>
@@ -122,13 +112,14 @@ export function CustomerList() {
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleEdit(customer)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
+                                            <Link href={`/customers/${customer.id}/edit`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -145,11 +136,7 @@ export function CustomerList() {
                 </div>
             )}
 
-            <CustomerModal
-                isOpen={isModalOpen}
-                onClose={handleModalClose}
-                customer={editingCustomer}
-            />
+
 
             <ConfirmDialog
                 open={!!deletingCustomer}

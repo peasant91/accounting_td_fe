@@ -15,10 +15,10 @@ export default function CustomerDetailPage() {
     const router = useRouter();
     const id = Number(params.id);
 
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    const { data, isLoading, error } = useCustomer(id);
+    const { data, isLoading, error, isRefetching } = useCustomer(id);
     const deleteCustomer = useDeleteCustomer();
 
     const customer = data?.data;
@@ -50,18 +50,15 @@ export default function CustomerDetailPage() {
         );
     }
 
-    // Convert customer to list item format for modal compatibility
-    const customerListItem: CustomerListItem = {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        total_receivable: customer.total_receivable,
-        status: customer.status,
-    };
+
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 relative">
+            {isRefetching && (
+                <div className="absolute inset-0 bg-background/50 z-50 flex items-center justify-center rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            )}
             <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -75,9 +72,11 @@ export default function CustomerDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
-                        Edit
-                    </Button>
+                    <Link href={`/customers/${id}/edit`}>
+                        <Button variant="outline">
+                            Edit
+                        </Button>
+                    </Link>
                     <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>
                         Delete
                     </Button>
@@ -136,9 +135,17 @@ export default function CustomerDetailPage() {
                             <span className="block text-foreground italic">{customer.notes || '-'}</span>
                         </div>
                         <div className="space-y-1">
+                            <span className="text-sm font-medium text-muted-foreground">Company Name</span>
+                            <span className="block text-foreground">{customer.company_name || '-'}</span>
+                        </div>
+                        <div className="space-y-1">
+                            <span className="text-sm font-medium text-muted-foreground">Currency</span>
+                            <span className="block text-foreground">{customer.currency || 'IDR'}</span>
+                        </div>
+                        <div className="space-y-1">
                             <span className="text-sm font-medium text-muted-foreground">Total Receivable</span>
                             <span className="block text-xl font-bold text-primary">
-                                {formatCurrency(customer.total_receivable)}
+                                {formatCurrency(customer.total_receivable, customer.currency)}
                             </span>
                         </div>
                     </div>
@@ -190,7 +197,7 @@ export default function CustomerDetailPage() {
                                         <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.invoice_date)}</td>
                                         <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.due_date)}</td>
                                         <td className="px-4 py-3 text-sm text-right font-medium text-foreground">
-                                            {formatCurrency(invoice.total)}
+                                            {formatCurrency(invoice.total, invoice.currency)}
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <StatusBadge status={invoice.status} />
@@ -210,11 +217,7 @@ export default function CustomerDetailPage() {
                 )}
             </section>
 
-            <CustomerModal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                customer={customerListItem}
-            />
+
 
             <ConfirmDialog
                 open={isDeleteModalOpen}

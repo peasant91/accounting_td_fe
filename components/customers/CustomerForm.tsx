@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { Label } from '@/components/ui/label';
 import { CustomerFormData } from '@/types';
 
@@ -15,8 +15,10 @@ interface CustomerFormProps {
 
 const initialFormData: CustomerFormData = {
     name: '',
+    company_name: '',
     email: '',
     phone: '',
+    currency: 'IDR',
     address_line_1: '',
     city: '',
     state: '',
@@ -90,6 +92,12 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     required
                 />
                 <Input
+                    label="Company Name"
+                    name="company_name"
+                    value={formData.company_name || ''}
+                    onChange={handleChange}
+                />
+                <Input
                     label="Email"
                     name="email"
                     type="email"
@@ -98,6 +106,27 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     error={errors.email}
                     required
                 />
+                <div className="space-y-2">
+                    <Label>Currency</Label>
+                    <Select
+                        value={formData.currency || 'IDR'}
+                        onValueChange={(value: string) => {
+                            console.log('Currency changed to:', value);
+                            setFormData(prev => ({ ...prev, currency: value }));
+                        }}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="IDR">IDR</SelectItem>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="SGD">SGD</SelectItem>
+                            <SelectItem value="AUD">AUD</SelectItem>
+                            <SelectItem value="JPY">JPY</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <Input
                     label="Phone"
                     name="phone"

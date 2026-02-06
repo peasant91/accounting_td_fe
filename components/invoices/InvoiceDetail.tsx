@@ -7,6 +7,17 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal } from '@/components/invoices';
 import { Loader2, ArrowLeft, Printer } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface InvoiceDetailProps {
     invoiceId: number;
@@ -27,16 +38,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
         router.push(`/invoices/${invoiceId}/edit`);
     };
 
-    const handleDelete = async () => {
-        if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
-            try {
-                await deleteInvoice.mutateAsync(invoiceId);
-                router.push('/invoices');
-            } catch (error) {
-                console.error('Failed to delete invoice:', error);
-            }
-        }
-    };
+
 
     if (isLoading) {
         return (
@@ -97,7 +99,28 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 <div className="flex flex-wrap gap-2">
                     {invoice.status === 'draft' && (
                         <>
-                            <Button variant="ghost" onClick={handleDelete}>Delete</Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost">Delete</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the invoice.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => deleteInvoice.mutateAsync(invoiceId).then(() => router.push('/invoices'))}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                            Delete
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                             <Button variant="secondary" onClick={handleEdit}>Edit</Button>
                             <Button onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
                         </>
@@ -133,7 +156,10 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium text-muted-foreground">Customer</h3>
                         <div>
-                            <p className="font-semibold text-foreground">{invoice.customer.name}</p>
+                            <p className="font-semibold text-foreground">{invoice.customer.company_name || invoice.customer.name}</p>
+                            {invoice.customer.company_name && (
+                                <p className="text-sm text-foreground">{invoice.customer.name}</p>
+                            )}
                             <p className="text-sm text-muted-foreground">{invoice.customer.email}</p>
                             {invoice.customer.address_line_1 && (
                                 <p className="text-sm text-muted-foreground">{invoice.customer.address_line_1}</p>
@@ -154,7 +180,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium text-muted-foreground">Amount Due</h3>
-                        <p className="text-3xl font-bold text-primary">{formatCurrency(invoice.total)}</p>
+                        <p className="text-3xl font-bold text-primary">{formatCurrency(invoice.total, invoice.currency)}</p>
                     </div>
                 </div>
 
@@ -176,8 +202,8 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                                     <tr key={item.id}>
                                         <td className="py-3 text-foreground">{item.description}</td>
                                         <td className="py-3 text-right text-muted-foreground">{item.quantity}</td>
-                                        <td className="py-3 text-right text-muted-foreground">{formatCurrency(item.unit_price)}</td>
-                                        <td className="py-3 text-right font-medium text-foreground">{formatCurrency(item.amount)}</td>
+                                        <td className="py-3 text-right text-muted-foreground">{formatCurrency(item.unit_price, invoice.currency)}</td>
+                                        <td className="py-3 text-right font-medium text-foreground">{formatCurrency(item.amount, invoice.currency)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -190,15 +216,15 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <div className="w-full max-w-xs space-y-2">
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Subtotal</span>
-                            <span className="text-foreground">{formatCurrency(invoice.subtotal)}</span>
+                            <span className="text-foreground">{formatCurrency(invoice.subtotal, invoice.currency)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Tax ({invoice.tax_rate}%)</span>
-                            <span className="text-foreground">{formatCurrency(invoice.tax_amount)}</span>
+                            <span className="text-foreground">{formatCurrency(invoice.tax_amount, invoice.currency)}</span>
                         </div>
                         <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
                             <span>Total</span>
-                            <span className="text-primary">{formatCurrency(invoice.total)}</span>
+                            <span className="text-primary">{formatCurrency(invoice.total, invoice.currency)}</span>
                         </div>
                     </div>
                 </div>

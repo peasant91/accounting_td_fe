@@ -3,11 +3,24 @@
 /**
  * Format a number as currency.
  */
-export function formatCurrency(amount: number, currency = 'USD', locale = 'en-US'): string {
-    return new Intl.NumberFormat(locale, {
+export function formatCurrency(amount: number, currency = 'IDR', locale?: string): string {
+    const finalLocale = locale || getLocaleForCurrency(currency);
+    return new Intl.NumberFormat(finalLocale, {
         style: 'currency',
         currency,
+        minimumFractionDigits: currency === 'JPY' ? 0 : 2,
     }).format(amount);
+}
+
+function getLocaleForCurrency(currency: string): string {
+    switch (currency) {
+        case 'IDR': return 'id-ID';
+        case 'USD': return 'en-US';
+        case 'JPY': return 'ja-JP';
+        case 'AUD': return 'en-AU';
+        case 'SGD': return 'en-SG';
+        default: return 'en-US';
+    }
 }
 
 /**

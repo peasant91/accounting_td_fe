@@ -35,11 +35,20 @@ export function SendInvoiceModal({
 
     useEffect(() => {
         if (isOpen) {
-            setRecipientEmail(customerEmail);
-            setSubject(`Invoice ${invoiceNumber} from Timedoor`);
-            setMessage(`Dear Customer,\n\nPlease find attached the invoice ${invoiceNumber} for your recent purchase.\n\nThank you for your business.\n\nBest regards,\nTimedoor Team`);
+            // Reset form when modal opens
+            if (recipientEmail !== customerEmail) {
+                setRecipientEmail(customerEmail);
+            }
+            const newSubject = `Invoice ${invoiceNumber} from Timedoor`;
+            if (subject !== newSubject) {
+                setSubject(newSubject);
+            }
+            const newMessage = `Dear Customer,\n\nPlease find attached the invoice ${invoiceNumber} for your recent purchase.\n\nThank you for your business.\n\nBest regards,\nTimedoor Team`;
+            if (message !== newMessage) {
+                setMessage(newMessage);
+            }
         }
-    }, [isOpen, customerEmail, invoiceNumber]);
+    }, [isOpen, customerEmail, invoiceNumber, recipientEmail, subject, message]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,14 +79,14 @@ export function SendInvoiceModal({
                         name="recipient_email"
                         type="email"
                         value={recipientEmail}
-                        onChange={(e) => setRecipientEmail(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecipientEmail(e.target.value)}
                         required
                     />
                     <Input
                         label="Subject"
                         name="subject"
                         value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
                         required
                     />
                     <div className="space-y-2">
@@ -85,7 +94,7 @@ export function SendInvoiceModal({
                         <textarea
                             id="message"
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                             required
                             rows={6}
                             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

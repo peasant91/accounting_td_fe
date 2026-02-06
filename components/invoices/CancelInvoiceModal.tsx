@@ -58,7 +58,7 @@ export function CancelInvoiceModal({
                         <textarea
                             id="cancellation_reason"
                             value={cancellationReason}
-                            onChange={(e) => setCancellationReason(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCancellationReason(e.target.value)}
                             placeholder="Why is this invoice being cancelled?"
                             required
                             rows={3}

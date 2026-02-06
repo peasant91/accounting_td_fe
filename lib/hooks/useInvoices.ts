@@ -32,6 +32,7 @@ export function useCreateInvoice() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
         },
     });
 }
@@ -44,6 +45,7 @@ export function useUpdateInvoice() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
         },
     });
 }

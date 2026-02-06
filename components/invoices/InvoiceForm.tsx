@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input, Label } from '@/components/ui';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice } from '@/lib/hooks';
 import { InvoiceFormData, InvoiceItemFormData } from '@/types';
@@ -38,24 +38,42 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    const [currency, setCurrency] = useState('IDR');
+
+    const searchParams = useSearchParams();
+    const autoSelectCustomerId = searchParams.get('customer_id');
+
     useEffect(() => {
         if (isEditMode && existingInvoiceData?.data) {
             const invoice = existingInvoiceData.data;
-            setFormData({
-                customer_id: invoice.customer_id,
-                invoice_date: invoice.invoice_date.split('T')[0],
-                due_date: invoice.due_date.split('T')[0],
-                tax_rate: Number(invoice.tax_rate),
-                notes: invoice.notes || '',
-                internal_notes: invoice.internal_notes || '',
-                items: invoice.items.map((item) => ({
-                    description: item.description,
-                    quantity: Number(item.quantity),
-                    unit_price: Number(item.unit_price),
-                })),
-            });
+            // Only update if the invoice data has actually changed or hasn't been loaded yet
+            if (formData.customer_id === 0) {
+                setFormData({
+                    customer_id: invoice.customer_id,
+                    invoice_date: invoice.invoice_date.split('T')[0],
+                    due_date: invoice.due_date.split('T')[0],
+                    tax_rate: Number(invoice.tax_rate),
+                    notes: invoice.notes || '',
+                    internal_notes: invoice.internal_notes || '',
+                    items: invoice.items.map((item) => ({
+                        description: item.description,
+                        quantity: Number(item.quantity),
+                        unit_price: Number(item.unit_price),
+                    })),
+                });
+                setCurrency(invoice.currency || 'IDR');
+            }
+        } else if (!isEditMode && autoSelectCustomerId && formData.customer_id === 0 && customersData?.data) {
+            // Auto-select customer from URL params
+            const customerId = Number(autoSelectCustomerId);
+            const customer = customersData.data.find(c => c.id === customerId);
+
+            if (customer) {
+                setFormData(prev => ({ ...prev, customer_id: customerId }));
+                setCurrency(customer.currency || 'IDR');
+            }
         }
-    }, [isEditMode, existingInvoiceData]);
+    }, [isEditMode, existingInvoiceData, formData.customer_id, autoSelectCustomerId, customersData]);
 
     const customers = customersData?.data || [];
     const isSubmitting = createInvoice.isPending || updateInvoice.isPending;
@@ -75,6 +93,13 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             ...prev,
             [name]: name === 'customer_id' || name === 'tax_rate' ? Number(value) : value,
         }));
+
+        if (name === 'customer_id') {
+            const selectedCustomer = customers.find(c => c.id === Number(value));
+            if (selectedCustomer) {
+                setCurrency(selectedCustomer.currency || 'IDR');
+            }
+        }
     };
 
     const handleItemChange = (index: number, field: keyof InvoiceItemFormData, value: string | number) => {
@@ -261,14 +286,14 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     type="text"
                                     placeholder="Item description"
                                     value={item.description}
-                                    onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'description', e.target.value)}
                                     className="col-span-5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
                                 <input
                                     type="number"
                                     min="1"
                                     value={item.quantity}
-                                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'quantity', e.target.value)}
                                     className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
                                 <input
@@ -276,11 +301,11 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     min="0"
                                     step="0.01"
                                     value={item.unit_price}
-                                    onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'unit_price', e.target.value)}
                                     className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
                                 <span className="col-span-2 text-right font-medium">
-                                    {formatCurrency(item.quantity * item.unit_price)}
+                                    {formatCurrency(item.quantity * item.unit_price, currency)}
                                 </span>
                                 <Button
                                     type="button"
@@ -301,15 +326,15 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         <div className="w-full max-w-xs space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal:</span>
-                                <span>{formatCurrency(calculateSubtotal())}</span>
+                                <span>{formatCurrency(calculateSubtotal(), currency)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Tax ({formData.tax_rate}%):</span>
-                                <span>{formatCurrency(calculateTax())}</span>
+                                <span>{formatCurrency(calculateTax(), currency)}</span>
                             </div>
                             <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
                                 <span>Total:</span>
-                                <span className="text-primary">{formatCurrency(calculateTotal())}</span>
+                                <span className="text-primary">{formatCurrency(calculateTotal(), currency)}</span>
                             </div>
                         </div>
                     </div>
