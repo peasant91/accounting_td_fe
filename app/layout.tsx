@@ -3,6 +3,7 @@
 import './globals.css';
 import { QueryProvider } from '@/lib/providers';
 import { Layout } from '@/components/Layout';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({
   children,
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <Layout>{children}</Layout>
+          <Toaster />
         </QueryProvider>
       </body>
     </html>

@@ -103,7 +103,7 @@ export function CustomerList() {
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{customer.email}</td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{customer.phone || '-'}</td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
-                                        {formatCurrency(customer.total_receivable)}
+                                        {formatCurrency(customer.total_receivable, customer.currency)}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex justify-end gap-1">

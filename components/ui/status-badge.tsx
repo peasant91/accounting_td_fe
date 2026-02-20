@@ -3,11 +3,11 @@ import { InvoiceStatus } from "@/types/invoice"
 import { CustomerStatus } from "@/types/customer"
 
 interface StatusBadgeProps {
-    status: InvoiceStatus | CustomerStatus
+    status: InvoiceStatus | CustomerStatus | string
     className?: string
 }
 
-const statusConfig: Record<InvoiceStatus | CustomerStatus, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string }> = {
     // Invoice Statuses
     draft: {
         label: "Draft",
@@ -38,6 +38,20 @@ const statusConfig: Record<InvoiceStatus | CustomerStatus, { label: string; clas
     inactive: {
         label: "Inactive",
         className: "bg-zinc-100 text-zinc-600",
+    },
+
+    // Recurring Invoice Statuses
+    pending: {
+        label: "Pending",
+        className: "bg-yellow-100 text-yellow-800",
+    },
+    completed: {
+        label: "Completed",
+        className: "bg-green-100 text-green-800",
+    },
+    terminated: {
+        label: "Terminated",
+        className: "bg-red-100 text-red-800",
     },
 }
 

@@ -27,6 +27,15 @@ export interface DashboardSummary {
         count: number;
         amount: number;
     };
+    recurring_invoices: {
+        generated_today: number;
+        upcoming: {
+            id: number;
+            customer_name: string;
+            title: string;
+            next_invoice_date: string;
+        }[];
+    };
     recent_activity: ActivityItem[];
 }
 

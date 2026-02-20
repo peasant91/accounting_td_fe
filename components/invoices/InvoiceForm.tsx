@@ -12,6 +12,7 @@ const emptyItem: InvoiceItemFormData = {
     description: '',
     quantity: 1,
     unit_price: 0,
+    amount: 0,
 };
 
 interface InvoiceFormProps {
@@ -51,7 +52,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                 setFormData({
                     customer_id: invoice.customer_id,
                     invoice_date: invoice.invoice_date.split('T')[0],
-                    due_date: invoice.due_date.split('T')[0],
+                    due_date: invoice.due_date ? invoice.due_date.split('T')[0] : '',
                     tax_rate: Number(invoice.tax_rate),
                     notes: invoice.notes || '',
                     internal_notes: invoice.internal_notes || '',
@@ -59,6 +60,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         description: item.description,
                         quantity: Number(item.quantity),
                         unit_price: Number(item.unit_price),
+                        amount: Number(item.quantity) * Number(item.unit_price),
                     })),
                 });
                 setCurrency(invoice.currency || 'IDR');
@@ -150,9 +152,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         if (!formData.invoice_date) {
             newErrors.invoice_date = 'Invoice date is required';
         }
-        if (!formData.due_date) {
-            newErrors.due_date = 'Due date is required';
-        }
         if (formData.items.length === 0 || formData.items.every((item) => !item.description)) {
             newErrors.items = 'Please add at least one item';
         }
@@ -240,10 +239,9 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                 label="Due Date"
                                 name="due_date"
                                 type="date"
-                                value={formData.due_date}
+                                value={formData.due_date || ''}
                                 onChange={handleChange}
                                 error={errors.due_date}
-                                required
                             />
                         </div>
 

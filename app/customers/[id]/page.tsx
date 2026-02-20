@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useCustomer, useDeleteCustomer } from '@/lib/hooks';
 import { Button, StatusBadge, ConfirmDialog, EmptyState } from '@/components/ui';
 import { CustomerModal } from '@/components/customers/CustomerModal';
+import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBuilder';
+import { RecurringInvoiceList } from '@/components/recurring/RecurringInvoiceList';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { CustomerListItem } from '@/types';
 import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye, Trash2 } from 'lucide-react';
@@ -150,6 +152,14 @@ export default function CustomerDetailPage() {
                         </div>
                     </div>
                 </div>
+
+
+            </section>
+
+            <InvoiceTemplateBuilder customerId={customer.id} />
+
+            <section className="space-y-4">
+                <RecurringInvoiceList customerId={customer.id} />
             </section>
 
             <section className="space-y-4">
@@ -195,7 +205,7 @@ export default function CustomerDetailPage() {
                                             </Link>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.invoice_date)}</td>
-                                        <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.due_date)}</td>
+                                        <td className="px-4 py-3 text-sm text-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
                                         <td className="px-4 py-3 text-sm text-right font-medium text-foreground">
                                             {formatCurrency(invoice.total, invoice.currency)}
                                         </td>
@@ -228,6 +238,6 @@ export default function CustomerDetailPage() {
                 confirmText="Delete"
                 loading={deleteCustomer.isPending}
             />
-        </div>
+        </div >
     );
 }

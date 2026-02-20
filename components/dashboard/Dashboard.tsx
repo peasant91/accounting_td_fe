@@ -5,6 +5,7 @@ import { formatCurrency } from '@/lib/utils';
 import { SummaryCard } from './SummaryCard';
 import { QuickActions } from './QuickActions';
 import { RecentActivity } from './RecentActivity';
+import { RecurringInvoicesWidget } from './RecurringInvoicesWidget';
 import { Loader2 } from 'lucide-react';
 
 export function Dashboard() {
@@ -67,7 +68,10 @@ export function Dashboard() {
                 />
             </div>
 
-            <RecentActivity activities={summary?.recent_activity || []} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RecurringInvoicesWidget data={summary?.recurring_invoices!} />
+                <RecentActivity activities={summary?.recent_activity || []} />
+            </div>
         </div>
     );
 }

@@ -3,19 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useInvoices, useDeleteInvoice } from '@/lib/hooks';
-import { Button, EmptyState, StatusBadge, ConfirmDialog } from '@/components/ui';
+import { Button, EmptyState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { InvoiceListItem, InvoiceStatus } from '@/types';
+import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
 import { Loader2, FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
 export function InvoiceList() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
+    const [typeFilter, setTypeFilter] = useState<InvoiceType | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
 
     const { data, isLoading, error } = useInvoices({
         search,
         status: statusFilter || undefined,
+        type: typeFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
 
@@ -81,6 +83,15 @@ export function InvoiceList() {
                     <option value="overdue">Overdue</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
+                <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value as InvoiceType | '')}
+                    className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <option value="">All Types</option>
+                    <option value="manual">Manual</option>
+                    <option value="recurring">Recurring</option>
+                </select>
             </div>
 
             {invoices.length === 0 ? (
@@ -102,6 +113,7 @@ export function InvoiceList() {
                                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Due Date</th>
+                                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Type</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
                                 <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
@@ -117,9 +129,12 @@ export function InvoiceList() {
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{invoice.customer.name}</td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(invoice.invoice_date)}</td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(invoice.due_date)}</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        <TypeBadge type={invoice.type} />
+                                    </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
-                                        {formatCurrency(invoice.total)}
+                                        {formatCurrency(invoice.total, invoice.currency)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <StatusBadge status={invoice.status} />

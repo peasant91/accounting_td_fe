@@ -20,7 +20,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="flex min-h-screen">
             {/* Mobile menu button */}
             <button
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-background border border-border shadow-sm"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-background border border-border shadow-sm print:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -29,7 +29,7 @@ export function Layout({ children }: { children: ReactNode }) {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "w-60 bg-background border-r border-border flex flex-col fixed h-screen transition-transform lg:translate-x-0 z-40",
+                    "w-60 bg-background border-r border-border flex flex-col fixed h-screen transition-transform lg:translate-x-0 z-40 print:hidden",
                     mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
@@ -73,7 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
             )}
 
             {/* Main content */}
-            <main className="flex-1 lg:ml-60 min-h-screen bg-muted/30 p-6">
+            <main className="flex-1 lg:ml-60 min-h-screen bg-muted/30 p-6 print:ml-0 print:p-0 print:bg-white">
                 {children}
             </main>
         </div>

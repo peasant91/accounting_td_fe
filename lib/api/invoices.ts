@@ -20,6 +20,7 @@ export async function list(params: InvoiceListParams = {}): Promise<PaginatedRes
     if (params.per_page) searchParams.append('per_page', String(params.per_page));
     if (params.search) searchParams.append('search', params.search);
     if (params.status) searchParams.append('status', params.status);
+    if (params.type) searchParams.append('type', params.type);
     if (params.customer_id) searchParams.append('customer_id', String(params.customer_id));
     if (params.date_from) searchParams.append('date_from', params.date_from);
     if (params.date_to) searchParams.append('date_to', params.date_to);

@@ -6,6 +6,11 @@ interface PageProps {
     }>;
 }
 
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+
+// ... (keep interface)
+
 export default async function EditInvoicePage(props: PageProps) {
     const params = await props.params;
     const invoiceId = parseInt(params.id, 10);
@@ -14,5 +19,9 @@ export default async function EditInvoicePage(props: PageProps) {
         return <div>Invalid Invoice ID</div>;
     }
 
-    return <InvoiceForm invoiceId={invoiceId} />;
+    return (
+        <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="animate-spin h-6 w-6" /></div>}>
+            <InvoiceForm invoiceId={invoiceId} />
+        </Suspense>
+    );
 }
