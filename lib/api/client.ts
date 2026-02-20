@@ -23,11 +23,16 @@ class ApiClient {
     private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
         const { method = 'GET', body, headers = {} } = options;
 
+        const isFormData = body instanceof FormData;
+
         const requestHeaders: Record<string, string> = {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             ...headers,
         };
+
+        if (!isFormData) {
+            requestHeaders['Content-Type'] = 'application/json';
+        }
 
         if (this.token) {
             requestHeaders['Authorization'] = `Bearer ${this.token}`;
@@ -40,7 +45,7 @@ class ApiClient {
         };
 
         if (body && method !== 'GET') {
-            config.body = JSON.stringify(body);
+            config.body = isFormData ? (body as FormData) : JSON.stringify(body);
         }
 
         const response = await fetch(`${this.baseUrl}${endpoint}`, config);

@@ -60,7 +60,14 @@ export async function sendReminder(id: number, data: SendInvoiceData): Promise<v
 }
 
 export async function markAsPaid(id: number, data: MarkAsPaidData): Promise<SingleResponse<Invoice>> {
-    return apiClient.post<SingleResponse<Invoice>>(`/invoices/${id}/mark-as-paid`, data);
+    const formData = new FormData();
+    formData.append('payment_date', data.payment_date);
+    if (data.payment_method) formData.append('payment_method', data.payment_method);
+    if (data.payment_reference) formData.append('payment_reference', data.payment_reference);
+    if (data.notes) formData.append('notes', data.notes);
+    if (data.payment_proof) formData.append('payment_proof', data.payment_proof);
+
+    return apiClient.post<SingleResponse<Invoice>>(`/invoices/${id}/mark-as-paid`, formData);
 }
 
 export async function cancel(id: number, data: CancelInvoiceData): Promise<SingleResponse<Invoice>> {

@@ -59,6 +59,7 @@ export interface Invoice {
     payment_date: string | null;
     payment_method: PaymentMethod | null;
     payment_reference: string | null;
+    payment_proof_url?: string | null;
     items: InvoiceItem[];
     available_actions: string[];
     created_at: string;
@@ -122,6 +123,7 @@ export interface MarkAsPaidData {
     payment_method?: PaymentMethod;
     payment_reference?: string;
     notes?: string;
+    payment_proof?: File;
 }
 
 export interface CancelInvoiceData {

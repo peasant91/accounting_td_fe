@@ -150,7 +150,17 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             </>
                         )}
                         {invoice.status === 'paid' && (
-                            <Button variant="secondary" onClick={() => console.log('View Receipt')}>View Receipt</Button>
+                            <Button
+                                variant="secondary"
+                                disabled={!invoice.payment_proof_url}
+                                onClick={() => {
+                                    if (invoice.payment_proof_url) {
+                                        window.open(invoice.payment_proof_url, '_blank', 'noreferrer');
+                                    }
+                                }}
+                            >
+                                View Proof of payment
+                            </Button>
                         )}
                         <Button variant="ghost" onClick={handlePrint}>
                             <Printer className="h-4 w-4" />
