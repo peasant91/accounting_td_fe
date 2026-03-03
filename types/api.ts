@@ -31,6 +31,7 @@ export interface DashboardSummary {
         generated_today: number;
         upcoming: {
             id: number;
+            customer_id: number;
             customer_name: string;
             title: string;
             next_invoice_date: string;
