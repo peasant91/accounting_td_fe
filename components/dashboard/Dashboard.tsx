@@ -6,6 +6,7 @@ import { SummaryCard } from './SummaryCard';
 import { QuickActions } from './QuickActions';
 import { RecentActivity } from './RecentActivity';
 import { RecurringInvoicesWidget } from './RecurringInvoicesWidget';
+import { CronSilentBanner } from './CronSilentBanner';
 import { Loader2 } from 'lucide-react';
 
 export function Dashboard() {
@@ -40,6 +41,10 @@ export function Dashboard() {
                 </div>
                 <QuickActions />
             </header>
+
+            {summary?.recurring_invoices?.cron?.is_silent && (
+                <CronSilentBanner lastRunAt={summary.recurring_invoices.cron.last_run_at} />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <SummaryCard

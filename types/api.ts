@@ -29,6 +29,11 @@ export interface DashboardSummary {
     };
     recurring_invoices: {
         generated_today: number;
+        overdue_count: number;
+        cron: {
+            last_run_at: string | null;
+            is_silent: boolean;
+        };
         upcoming: {
             id: number;
             customer_id: number;
