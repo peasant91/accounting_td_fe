@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCustomers, useDeleteCustomer } from '@/lib/hooks';
-import { Button, EmptyState, ConfirmDialog } from '@/components/ui';
+import { useRouter } from 'next/navigation';
+import { useCustomers, useDeleteCustomer, useDebounce } from '@/lib/hooks';
+import { Button, EmptyState, ConfirmDialog, ErrorState, LoadingState } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerListItem } from '@/types';
-import { Loader2, Users, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Users, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 
 export function CustomerList() {
+    const router = useRouter();
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 300);
     const [deletingCustomer, setDeletingCustomer] = useState<CustomerListItem | null>(null);
 
-    const { data, isLoading, error } = useCustomers({ search });
+    const { data, isLoading, error } = useCustomers({ search: debouncedSearch });
     const deleteCustomer = useDeleteCustomer();
 
     const handleDelete = async () => {
@@ -23,21 +26,11 @@ export function CustomerList() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading customers...</span>
-            </div>
-        );
+        return <LoadingState message="Loading customers..." />;
     }
 
     if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 text-center">
-                <h3 className="text-lg font-semibold text-destructive">Error loading customers</h3>
-                <p className="text-muted-foreground">Please try again later.</p>
-            </div>
-        );
+        return <ErrorState title="Error loading customers" />;
     }
 
     const customers = data?.data || [];
@@ -74,7 +67,7 @@ export function CustomerList() {
                     description="Create your first customer to start sending invoices."
                     action={{
                         label: "Add Customer",
-                        onClick: () => window.location.href = '/customers/new'
+                        onClick: () => router.push('/customers/new')
                     }}
                 />
             ) : (

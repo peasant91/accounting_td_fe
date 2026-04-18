@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Label } from '@/components/ui';
+import { Button, Textarea } from '@/components/ui';
 import {
     Dialog,
     DialogContent,
@@ -53,18 +53,14 @@ export function CancelInvoiceModal({
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="cancellation_reason">Cancellation Reason</Label>
-                        <textarea
-                            id="cancellation_reason"
-                            value={cancellationReason}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCancellationReason(e.target.value)}
-                            placeholder="Why is this invoice being cancelled?"
-                            required
-                            rows={3}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                    </div>
+                    <Textarea
+                        label="Cancellation Reason"
+                        id="cancellation_reason"
+                        value={cancellationReason}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCancellationReason(e.target.value)}
+                        placeholder="Why is this invoice being cancelled?"
+                        required
+                    />
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>
                             Keep Invoice

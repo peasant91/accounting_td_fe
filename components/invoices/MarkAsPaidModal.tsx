@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input, Label } from '@/components/ui';
+import { Button, Input, Label, Textarea } from '@/components/ui';
 import {
     Dialog,
     DialogContent,
@@ -19,6 +19,7 @@ interface MarkAsPaidModalProps {
     invoiceId: number;
     invoiceNumber: string;
     totalAmount: number;
+    currency: string;
 }
 
 export function MarkAsPaidModal({
@@ -27,6 +28,7 @@ export function MarkAsPaidModal({
     invoiceId,
     invoiceNumber,
     totalAmount,
+    currency,
 }: MarkAsPaidModalProps) {
     const markAsPaid = useMarkAsPaid();
     const [paymentDate, setPaymentDate] = useState(getTodayString());
@@ -66,7 +68,7 @@ export function MarkAsPaidModal({
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        Total Amount Due: <strong className="text-foreground">{formatCurrency(totalAmount)}</strong>
+                        Total Amount Due: <strong className="text-foreground">{formatCurrency(totalAmount, currency)}</strong>
                     </p>
 
                     <Input
@@ -117,17 +119,13 @@ export function MarkAsPaidModal({
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">Notes</Label>
-                        <textarea
-                            id="notes"
-                            value={notes}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
-                            placeholder="Optional payment notes..."
-                            rows={3}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                    </div>
+                    <Textarea
+                        label="Notes"
+                        id="notes"
+                        value={notes}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+                        placeholder="Optional payment notes..."
+                    />
 
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>

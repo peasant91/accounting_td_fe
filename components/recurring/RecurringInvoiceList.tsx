@@ -22,9 +22,9 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
     const handleTerminate = async () => {
         if (terminatingId) {
             try {
-                await deleteMutation.mutateAsync(terminatingId);
+                await deleteMutation.mutateAsync({ id: terminatingId, customerId });
                 toast.success('Recurring invoice terminated');
-            } catch (error) {
+            } catch {
                 toast.error('Failed to terminate recurring invoice');
             }
             setTerminatingId(null);
@@ -35,7 +35,7 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
         try {
             await generateMutation.mutateAsync(id);
             toast.success('Invoice generated successfully');
-        } catch (error) {
+        } catch {
             toast.error('Failed to generate invoice');
         }
     };
@@ -48,7 +48,7 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
         return <div className="text-destructive p-4">Failed to load recurring invoices</div>;
     }
 
-    const invoices = data as RecurringInvoice[] || [];
+    const invoices: RecurringInvoice[] = data || [];
 
     return (
         <div className="space-y-4">
@@ -90,7 +90,7 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
                                         {invoice.next_invoice_date ? formatDate(invoice.next_invoice_date) : '-'}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <StatusBadge status={invoice.status as any} />
+                                        <StatusBadge status={invoice.status} />
                                     </td>
                                     <td className="px-4 py-3 text-right space-x-2">
                                         <Button variant="ghost" size="icon" onClick={() => handleGenerate(invoice.id)} title="Run Now">

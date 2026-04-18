@@ -43,9 +43,13 @@ export function useUpdateRecurringInvoice() {
 export function useDeleteRecurringInvoice() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: number) => api.remove(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['recurring-invoices'] });
+        mutationFn: ({ id }: { id: number; customerId?: number }) => api.remove(id),
+        onSuccess: (_, { customerId }) => {
+            if (customerId) {
+                queryClient.invalidateQueries({ queryKey: ['recurring-invoices', customerId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ['recurring-invoices'] });
+            }
         },
     });
 }

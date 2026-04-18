@@ -1,35 +1,53 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { InvoiceComponentKey, InvoiceTemplate, ResolvedLocale } from '@/types/invoice-template';
+import { formatCurrency } from '@/lib/utils';
+
+export interface PrintableInvoiceItem {
+    description?: string;
+    quantity?: number;
+    unit_price?: number;
+    amount: number;
+}
+
+export interface PrintableInvoice {
+    invoice_number: string;
+    invoice_date: string;
+    customer_name?: string;
+    customer?: { company_name?: string | null; name?: string };
+    items?: PrintableInvoiceItem[];
+    total: number;
+    currency: string;
+    sender?: {
+        company_name: string;
+        address: string;
+        phone: string;
+        email: string;
+        npwp?: string;
+    };
+    bank_info?: {
+        bank_name: string;
+        account_name: string;
+        account_number: string;
+    };
+}
 
 interface InvoicePrintViewProps {
     template: InvoiceTemplate;
     locale: ResolvedLocale;
-    invoice: any;
+    invoice: PrintableInvoice;
 }
 
 export function InvoicePrintView({ template, locale, invoice }: InvoicePrintViewProps) {
     const components = template.components || [];
     const labels = locale.labels;
 
-    const isEnabled = (key: InvoiceComponentKey) => {
-        const comp = components.find((c) => c.key === key);
-        return comp ? comp.enabled : false;
-    };
-
-    const formatCurrency = (amount: number, currency: string) => {
-        const numAmount = Number(amount);
-        if (isNaN(numAmount)) return '';
-
-        if (currency === 'JPY') {
-            return `¥${numAmount.toLocaleString('de-DE')}`;
-        } else if (currency === 'IDR') {
-            return `IDR ${numAmount.toLocaleString('de-DE')}`;
-        } else {
-            return `$${numAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-        }
-    };
+    const enabledKeys = useMemo(
+        () => new Set(components.filter((c) => c.enabled).map((c) => c.key)),
+        [components]
+    );
+    const isEnabled = (key: InvoiceComponentKey) => enabledKeys.has(key);
 
     const EMPTY_ROWS = 8;
     const filledCount = invoice.items?.length ?? 0;
@@ -37,7 +55,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
 
     return (
         <div className="bg-white text-[11px] text-gray-800 px-10 py-6 font-sans leading-relaxed" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif", WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}>
-            {/* ─── HEADER ─── */}
             {isEnabled('company_header') && (
                 <div className="mb-6">
                     <div className="flex items-end justify-between">
@@ -48,7 +65,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                                 alt="Timedoor"
                                 className="h-10 object-contain"
                                 onError={(e) => {
-                                    // Fallback to text if image not found
                                     (e.target as HTMLImageElement).style.display = 'none';
                                     (e.target as HTMLImageElement).parentElement!.innerHTML =
                                         '<span style="font-size:28px;font-weight:800;color:#1B2A3D;font-family:sans-serif">timedoor</span>';
@@ -74,7 +90,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                 </div>
             )}
 
-            {/* ─── TO + SENDER ─── */}
             <div className="flex justify-between mb-6">
                 {isEnabled('customer_details') && (
                     <div>
@@ -99,7 +114,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                 )}
             </div>
 
-            {/* ─── TOTAL SUMMARY BOX ─── */}
             {isEnabled('total_summary_box') && (
                 <div className="mb-6 border border-gray-300 rounded-sm overflow-hidden">
                     <div className="flex">
@@ -120,7 +134,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                 </div>
             )}
 
-            {/* ─── LINE ITEMS ─── */}
             {isEnabled('line_items') && (
                 <div className="mb-6">
                     <table className="w-full border-collapse">
@@ -135,7 +148,7 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                             </tr>
                         </thead>
                         <tbody>
-                            {invoice.items?.map((item: any, index: number) => (
+                            {invoice.items?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="py-2 px-2 text-red-500 border-b border-gray-200">{item.description}</td>
                                     <td className="py-2 px-2 text-center text-red-500 border-b border-gray-200">{item.quantity ?? 1}</td>
@@ -147,7 +160,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                                     </td>
                                 </tr>
                             ))}
-                            {/* Empty striped rows */}
                             {Array.from({ length: emptyRowCount }).map((_, i) => (
                                 <tr key={`empty-${i}`}>
                                     <td className="py-2.5 px-2 border-b border-gray-200 bg-gray-50">&nbsp;</td>
@@ -161,7 +173,6 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                 </div>
             )}
 
-            {/* ─── BANK TRANSFER + GRAND TOTAL ─── */}
             {(isEnabled('bank_transfer') || isEnabled('grand_total') || isEnabled('transfer_fee_note')) && (
                 <div className="border-t-2 border-gray-300 pt-4">
                     {/* Unique code label */}

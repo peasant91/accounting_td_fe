@@ -2,24 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, StatusBadge, TypeBadge } from '@/components/ui';
+import { Button, ConfirmDialog, ErrorState, LoadingState, StatusBadge, TypeBadge } from '@/components/ui';
 import { useInvoice, useDeleteInvoice } from '@/lib/hooks';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal, InvoicePrintView } from '@/components/invoices';
 import { useInvoicePreview } from '@/lib/hooks/useInvoiceTemplates';
-import { Loader2, ArrowLeft, Printer } from 'lucide-react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Printer } from 'lucide-react';
 
 interface InvoiceDetailProps {
     invoiceId: number;
@@ -31,7 +20,6 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     const deleteInvoice = useDeleteInvoice();
     const invoice = invoiceData?.data;
 
-    // Fetch preview data for printing (same API as InvoicePreviewModal for consistency)
     const { data: previewData } = useInvoicePreview(invoice?.customer?.id || 0, !!invoice?.customer?.id);
     const preview = previewData?.data;
 
@@ -39,37 +27,31 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
         window.print();
     };
 
-    // Modal states
     const [isSendModalOpen, setIsSendModalOpen] = useState(false);
     const [isMarkPaidModalOpen, setIsMarkPaidModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     const handleEdit = () => {
         router.push(`/invoices/${invoiceId}/edit`);
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading invoice details...</span>
-            </div>
-        );
+        return <LoadingState message="Loading invoice details..." />;
     }
 
     if (error || !invoice) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
-                <h2 className="text-lg font-semibold text-destructive">Error loading invoice</h2>
-                <p className="text-muted-foreground">Could not find invoice with ID {invoiceId}</p>
-                <Button onClick={() => router.push('/invoices')}>Back to Invoices</Button>
-            </div>
+            <ErrorState
+                title="Error loading invoice"
+                description={`Could not find invoice with ID ${invoiceId}`}
+                action={{ label: 'Back to Invoices', onClick: () => router.push('/invoices') }}
+            />
         );
     }
 
     return (
         <div>
-            {/* Modals */}
             <SendInvoiceModal
                 isOpen={isSendModalOpen}
                 onClose={() => setIsSendModalOpen(false)}
@@ -83,6 +65,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 invoiceId={invoice.id}
                 invoiceNumber={invoice.invoice_number}
                 totalAmount={invoice.total}
+                currency={invoice.currency}
             />
             <CancelInvoiceModal
                 isOpen={isCancelModalOpen}
@@ -90,8 +73,16 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 invoiceId={invoice.id}
                 invoiceNumber={invoice.invoice_number}
             />
+            <ConfirmDialog
+                open={isDeleteOpen}
+                onOpenChange={setIsDeleteOpen}
+                onConfirm={() => deleteInvoice.mutateAsync(invoiceId).then(() => router.push('/invoices'))}
+                title="Delete Invoice"
+                description="This action cannot be undone. The invoice will be permanently deleted."
+                confirmText="Delete"
+                loading={deleteInvoice.isPending}
+            />
 
-            {/* ─── SCREEN CONTENT (hidden when printing) ─── */}
             <div className="space-y-6 print:hidden">
                 {/* Header with Actions */}
                 <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -109,28 +100,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <div className="flex flex-wrap gap-2">
                         {invoice.status === 'draft' && (
                             <>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="ghost">Delete</Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                This action cannot be undone. This will permanently delete the invoice.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction
-                                                onClick={() => deleteInvoice.mutateAsync(invoiceId).then(() => router.push('/invoices'))}
-                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                            >
-                                                Delete
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+                                <Button variant="ghost" onClick={() => setIsDeleteOpen(true)}>Delete</Button>
                                 <Button variant="secondary" onClick={handleEdit}>Edit</Button>
                                 <Button onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
                             </>
@@ -279,27 +249,23 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </div>
 
 
-            {/* ─── PRINT VIEW (visible only when printing) ─── */}
-            {
-                preview && invoice && (
-                    <div className="hidden print:block">
-                        <InvoicePrintView
-                            template={preview.template}
-                            locale={preview.locale}
-                            invoice={{
-                                ...preview.sample_invoice,
-                                // Override sample data with real invoice data
-                                invoice_number: invoice.invoice_number,
-                                invoice_date: invoice.invoice_date,
-                                customer_name: invoice.customer.company_name || invoice.customer.name,
-                                items: invoice.items,
-                                total: invoice.total,
-                                currency: invoice.currency,
-                            }}
-                        />
-                    </div>
-                )
-            }
-        </div >
+            {preview && invoice && (
+                <div className="hidden print:block">
+                    <InvoicePrintView
+                        template={preview.template}
+                        locale={preview.locale}
+                        invoice={{
+                            ...preview.sample_invoice,
+                            invoice_number: invoice.invoice_number,
+                            invoice_date: invoice.invoice_date,
+                            customer_name: invoice.customer.company_name || invoice.customer.name,
+                            items: invoice.items,
+                            total: invoice.total,
+                            currency: invoice.currency,
+                        }}
+                    />
+                </div>
+            )}
+        </div>
     );
 }
