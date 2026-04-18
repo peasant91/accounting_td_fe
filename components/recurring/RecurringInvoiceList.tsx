@@ -90,7 +90,30 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
                                         {invoice.next_invoice_date ? formatDate(invoice.next_invoice_date) : '-'}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <StatusBadge status={invoice.status} />
+                                        {invoice.is_overdue ? (
+                                            <span
+                                                className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive"
+                                                title={
+                                                    invoice.next_invoice_date
+                                                        ? `Next run was ${invoice.next_invoice_date}`
+                                                        : 'Overdue'
+                                                }
+                                            >
+                                                Overdue
+                                                {invoice.next_invoice_date && (() => {
+                                                    const days = Math.max(
+                                                        1,
+                                                        Math.floor(
+                                                            (Date.now() - new Date(invoice.next_invoice_date).getTime()) /
+                                                                (24 * 60 * 60 * 1000)
+                                                        )
+                                                    );
+                                                    return ` · ${days}d`;
+                                                })()}
+                                            </span>
+                                        ) : (
+                                            <StatusBadge status={invoice.status} />
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-right space-x-2">
                                         <Button variant="ghost" size="icon" onClick={() => handleGenerate(invoice.id)} title="Run Now">
