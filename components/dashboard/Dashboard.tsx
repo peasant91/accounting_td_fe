@@ -49,7 +49,7 @@ export function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <SummaryCard
                     title="Total Receivables"
-                    value={formatCurrency(summary?.total_receivables || 0)}
+                    value={formatCurrency(summary?.total_receivables || 0, 'IDR')}
                     icon="💰"
                     variant="default"
                     href="/invoices?status=unpaid"
@@ -66,7 +66,7 @@ export function Dashboard() {
                 <SummaryCard
                     title="Due This Month"
                     value={`${summary?.invoices_due_this_month?.count || 0} invoices`}
-                    subValue={formatCurrency(summary?.invoices_due_this_month?.amount || 0)}
+                    subValue={formatCurrency(summary?.invoices_due_this_month?.amount || 0, 'IDR')}
                     icon="📅"
                     variant="default"
                     href="/invoices?due=this_month"

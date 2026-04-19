@@ -3,7 +3,7 @@
 /**
  * Format a number as currency.
  */
-export function formatCurrency(amount: number, currency = 'IDR', locale?: string): string {
+export function formatCurrency(amount: number, currency: string, locale?: string): string {
     const finalLocale = locale || getLocaleForCurrency(currency);
     return new Intl.NumberFormat(finalLocale, {
         style: 'currency',
