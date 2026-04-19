@@ -8,6 +8,12 @@ export interface PaginatedResponse<T> {
         per_page: number;
         total: number;
     };
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
 }
 
 export interface SingleResponse<T> {
@@ -64,4 +70,41 @@ export interface ActivityItem {
     action: string;
     description: string;
     created_at: string;
+}
+
+export type UserRole = 'super_admin' | 'admin';
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: UserRole;
+}
+
+export interface Admin extends User {
+    created_at: string;
+    updated_at: string;
+    last_login_at?: string | null;
+}
+
+export interface ActivityLogEntry {
+    id: number;
+    action: string;
+    user: { id: number; name: string; email: string } | null;
+    loggable_type: string | null;
+    loggable_id: number | null;
+    properties: Record<string, unknown>;
+    ip_address: string | null;
+    user_agent: string | null;
+    created_at: string;
+}
+
+export interface LoginAttempt {
+    id: number;
+    email: string;
+    user_id: number | null;
+    ip_address: string;
+    user_agent: string | null;
+    successful: boolean;
+    attempted_at: string;
 }
