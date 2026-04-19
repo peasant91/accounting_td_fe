@@ -21,11 +21,12 @@ test('regular admin direct navigating /admins sees forbidden', async ({ page }) 
 test('super creates an admin', async ({ page }) => {
     await login(page, SUPER.email, SUPER.password);
     await page.goto('/admins');
-    await page.click('text=Create admin');
-    await page.fill('input[type="text"]', 'New User');
-    await page.fill('input[type="email"]', 'newuser@e2e.test');
-    await page.fill('input[type="password"]', 'aBcDefGh1234');
-    await page.click('button:has-text("Create")');
+    await page.getByRole('button', { name: 'Create admin' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('input#admin-name').fill('New User');
+    await dialog.locator('input#admin-email').fill('newuser@e2e.test');
+    await dialog.locator('input#admin-password').fill('aBcDefGh1234');
+    await dialog.getByRole('button', { name: /^Create$/ }).click();
     await expect(page.getByText('newuser@e2e.test')).toBeVisible();
 });
 
@@ -34,6 +35,7 @@ test('delete last super admin blocked', async ({ page }) => {
     await page.goto('/admins');
     const superRow = page.locator('tr', { hasText: SUPER.email });
     await superRow.getByRole('button', { name: 'Delete' }).click();
-    await page.click('button:has-text("Delete")');
-    await expect(page.getByRole('alert')).toContainText(/cannot/i);
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: /^Delete$/ }).click();
+    await expect(dialog.locator('p[role="alert"]')).toContainText(/cannot/i);
 });
