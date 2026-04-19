@@ -4,3 +4,4 @@ export * from './useDashboard';
 export * from './useRecurringInvoices';
 export * from './useDebounce';
 export * from './useLineItems';
+export * from './useCurrencyRates';
