@@ -7,6 +7,8 @@ import { QuickActions } from './QuickActions';
 import { RecentActivity } from './RecentActivity';
 import { RecurringInvoicesWidget } from './RecurringInvoicesWidget';
 import { CronSilentBanner } from './CronSilentBanner';
+import { TotalReceivablesCard } from './TotalReceivablesCard';
+import { MissingRatesWarning } from './MissingRatesWarning';
 import { Loader2 } from 'lucide-react';
 
 export function Dashboard() {
@@ -42,18 +44,18 @@ export function Dashboard() {
                 <QuickActions />
             </header>
 
+            {summary?.total_receivables && summary.total_receivables.missing_rates.length > 0 && (
+                <MissingRatesWarning currencies={summary.total_receivables.missing_rates} />
+            )}
+
             {summary?.recurring_invoices?.cron?.is_silent && (
                 <CronSilentBanner lastRunAt={summary.recurring_invoices.cron.last_run_at} />
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <SummaryCard
-                    title="Total Receivables"
-                    value={formatCurrency(summary?.total_receivables || 0, 'IDR')}
-                    icon="💰"
-                    variant="default"
-                    href="/invoices?status=unpaid"
-                />
+                {summary?.total_receivables && (
+                    <TotalReceivablesCard data={summary.total_receivables} />
+                )}
 
                 <SummaryCard
                     title="Active Customers"
@@ -66,7 +68,7 @@ export function Dashboard() {
                 <SummaryCard
                     title="Due This Month"
                     value={`${summary?.invoices_due_this_month?.count || 0} invoices`}
-                    subValue={formatCurrency(summary?.invoices_due_this_month?.amount || 0, 'IDR')}
+                    subValue={formatCurrency(summary?.invoices_due_this_month?.amount || 0, summary?.total_receivables?.base_currency || 'IDR')}
                     icon="📅"
                     variant="default"
                     href="/invoices?due=this_month"

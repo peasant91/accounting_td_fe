@@ -20,8 +20,22 @@ export interface ApiError {
     errors?: Record<string, string[]>;
 }
 
+export interface ReceivablesBreakdownEntry {
+    currency: string;
+    amount: number;
+    base_equivalent: number | null;
+}
+
+export interface ReceivablesSummary {
+    base_currency: string;
+    base_total: number;
+    breakdown: ReceivablesBreakdownEntry[];
+    rates_updated_at: string | null;
+    missing_rates: string[];
+}
+
 export interface DashboardSummary {
-    total_receivables: number;
+    total_receivables: ReceivablesSummary;
     total_customers: number;
     invoices_due_this_month: {
         count: number;
