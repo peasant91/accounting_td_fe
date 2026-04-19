@@ -17,6 +17,8 @@ export function Layout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    if (pathname === '/login') return <>{children}</>;
+
     return (
         <div className="flex min-h-screen">
             {/* Mobile menu button */}
