@@ -2,7 +2,8 @@ import { Page, expect } from '@playwright/test';
 import { execSync } from 'child_process';
 
 export function resetDb() {
-    execSync('cd ../backend && php artisan e2e:reset', { stdio: 'inherit' });
+    const backendDir = process.env.BACKEND_DIR ?? '../accounting-backend';
+    execSync(`cd ${backendDir} && php artisan e2e:reset`, { stdio: 'inherit' });
 }
 
 export async function login(page: Page, email: string, password: string) {
