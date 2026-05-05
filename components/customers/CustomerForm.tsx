@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@/components/ui';
 import { Label } from '@/components/ui/label';
+import { validateEmail, validateRequired } from '@/lib/utils';
 import { CustomerFormData } from '@/types';
 
 interface CustomerFormProps {
@@ -47,15 +48,11 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
-        }
+        const nameCheck = validateRequired(formData.name, 'Name');
+        if (!nameCheck.valid) newErrors.name = nameCheck.message!;
 
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
-        }
+        const emailCheck = validateEmail(formData.email);
+        if (!emailCheck.valid) newErrors.email = emailCheck.message!;
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -111,7 +108,6 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     <Select
                         value={formData.currency || 'IDR'}
                         onValueChange={(value: string) => {
-                            console.log('Currency changed to:', value);
                             setFormData(prev => ({ ...prev, currency: value }));
                         }}
                     >
@@ -173,17 +169,13 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     value={formData.tax_id || ''}
                     onChange={handleChange}
                 />
-                <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <textarea
-                        id="notes"
-                        name="notes"
-                        value={formData.notes || ''}
-                        onChange={handleChange}
-                        rows={3}
-                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                </div>
+                <Textarea
+                    label="Notes"
+                    id="notes"
+                    name="notes"
+                    value={formData.notes || ''}
+                    onChange={handleChange}
+                />
             </div>
 
             <div className="flex justify-end gap-3">

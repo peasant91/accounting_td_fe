@@ -1,11 +1,12 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { RefreshCw, Calendar, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 interface RecurringInvoicesWidgetProps {
     data: {
         generated_today: number;
+        overdue_count: number;
         upcoming: {
             id: number;
             customer_id: number;
@@ -28,9 +29,17 @@ export function RecurringInvoicesWidget({ data }: RecurringInvoicesWidgetProps) 
                 <RefreshCw className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="flex items-center space-x-2 text-2xl font-bold">
-                    <span>{data.generated_today}</span>
-                    <span className="text-sm font-normal text-muted-foreground">generated today</span>
+                <div className="flex items-center gap-6 text-2xl font-bold">
+                    <div className="flex items-center gap-2">
+                        <span>{data.generated_today}</span>
+                        <span className="text-sm font-normal text-muted-foreground">generated today</span>
+                    </div>
+                    <div className="flex items-center gap-2 border-l border-border pl-6">
+                        <span className={cn(data.overdue_count > 0 ? 'text-destructive' : 'text-muted-foreground')}>
+                            {data.overdue_count}
+                        </span>
+                        <span className="text-sm font-normal text-muted-foreground">overdue</span>
+                    </div>
                 </div>
 
                 <div className="mt-4 space-y-3">

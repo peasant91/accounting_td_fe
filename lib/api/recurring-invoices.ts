@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { RecurringInvoice, RecurrenceType, RecurrenceUnit } from '@/types'; // Need to update types
+import { RecurringInvoice, RecurrenceType, RecurrenceUnit, InvoiceItemFormData } from '@/types';
 
 export interface RecurringInvoiceFormData {
     customer_id: number;
@@ -11,7 +11,7 @@ export interface RecurringInvoiceFormData {
     start_date: string;
     due_date_offset?: number;
     notes?: string;
-    line_items: any[]; // define proper type
+    line_items: InvoiceItemFormData[];
     tax_rate: number;
     currency: string;
 }

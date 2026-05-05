@@ -1,29 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
-// We need similar hooks for Recurring Invoices
-// Assuming useRecurringInvoice, useCreateRecurringInvoice, useUpdateRecurringInvoice exist or will be created
-// For now, I'll use placeholders or I need to create the hooks first?
-// I should create hooks first. 
-// Let's assume they are in '@/lib/hooks/useRecurringInvoices' or similar.
-import { useRecurringInvoice, useCreateRecurringInvoice, useUpdateRecurringInvoice } from '@/lib/hooks';
-import { useCustomers } from '@/lib/hooks';
+import { Button, Input, Label, LoadingState, Textarea } from '@/components/ui';
+import {
+    useRecurringInvoice,
+    useCreateRecurringInvoice,
+    useUpdateRecurringInvoice,
+    useCustomers,
+    useLineItems,
+} from '@/lib/hooks';
 import { InvoiceItemFormData, RecurrenceType, RecurrenceUnit } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
-import { Loader2, Plus, X, Calendar } from 'lucide-react';
-
-const emptyItem: InvoiceItemFormData = {
-    description: '',
-    quantity: 1,
-    unit_price: 0,
-    amount: 0,
-};
+import { Plus, X } from 'lucide-react';
 
 interface RecurringInvoiceFormProps {
     id?: number;
     customerId?: number;
+}
+
+interface RecurringFormState {
+    customer_id: number;
+    title: string;
+    recurrence_type: RecurrenceType;
+    recurrence_interval: number;
+    recurrence_unit: RecurrenceUnit;
+    total_count: number | null;
+    start_date: string;
+    due_date_offset: number;
+    tax_rate: number;
+    currency: string;
+    notes: string;
 }
 
 export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormProps) {
@@ -35,122 +42,113 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
 
     const isEditMode = !!id;
 
-    // Form State
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<RecurringFormState>({
         customer_id: customerId || 0,
         title: '',
-        recurrence_type: 'monthly' as RecurrenceType,
+        recurrence_type: 'monthly',
         recurrence_interval: 1,
-        recurrence_unit: 'month' as RecurrenceUnit,
-        total_count: null as number | null,
+        recurrence_unit: 'month',
+        total_count: null,
         start_date: getTodayString(),
         due_date_offset: 0,
         tax_rate: 0,
         currency: 'IDR',
         notes: '',
-        line_items: [{ ...emptyItem }],
     });
 
-    const [currency, setCurrency] = useState('IDR');
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
+        taxRate: formData.tax_rate,
+    });
 
-    // Load existing data
+    const existingId = existingData?.data?.id;
+    const customers = customersData?.data;
+
     useEffect(() => {
-        if (isEditMode && existingData?.data) {
-            const data = existingData.data;
-            setFormData({
-                customer_id: data.customer_id,
-                title: data.title,
-                recurrence_type: data.recurrence_type,
-                recurrence_interval: data.recurrence_interval,
-                recurrence_unit: data.recurrence_unit || 'month',
-                total_count: data.total_count,
-                start_date: data.start_date.split('T')[0],
-                due_date_offset: data.due_date_offset || 0,
-                tax_rate: Number(data.tax_rate),
-                currency: data.currency,
-                notes: data.notes || '',
-                line_items: Array.isArray(data.line_items) ? data.line_items.map((item: any) => ({
-                    description: item.description || '',
-                    quantity: Number(item.quantity) || 1,
-                    unit_price: Number(item.unit_price) || 0,
-                    amount: (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
-                })) : [{ ...emptyItem }],
-            });
-            setCurrency(data.currency);
-        } else if (customerId && customersData?.data) {
-            const customer = customersData.data.find(c => c.id === customerId);
-            if (customer) {
-                setFormData(prev => ({ ...prev, customer_id: customer.id, currency: customer.currency || 'IDR' }));
-                setCurrency(customer.currency || 'IDR');
-            }
+        if (!isEditMode || !existingData?.data) return;
+        const data = existingData.data;
+        setFormData({
+            customer_id: data.customer_id,
+            title: data.title,
+            recurrence_type: data.recurrence_type,
+            recurrence_interval: data.recurrence_interval,
+            recurrence_unit: data.recurrence_unit || 'month',
+            total_count: data.total_count,
+            start_date: data.start_date.split('T')[0],
+            due_date_offset: data.due_date_offset || 0,
+            tax_rate: Number(data.tax_rate),
+            currency: data.currency,
+            notes: data.notes || '',
+        });
+        setItems(
+            Array.isArray(data.line_items)
+                ? data.line_items.map((item: InvoiceItemFormData) => ({
+                      description: item.description || '',
+                      quantity: Number(item.quantity) || 1,
+                      unit_price: Number(item.unit_price) || 0,
+                      amount: (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
+                  }))
+                : []
+        );
+    }, [isEditMode, existingId, existingData, setItems]);
+
+    useEffect(() => {
+        if (isEditMode || !customerId || !customers) return;
+        const customer = customers.find((c) => c.id === customerId);
+        if (customer) {
+            setFormData((prev) => ({
+                ...prev,
+                customer_id: customer.id,
+                currency: customer.currency || 'IDR',
+            }));
         }
-    }, [isEditMode, existingData, customerId, customersData]);
+    }, [isEditMode, customerId, customers]);
 
     const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
     if (isEditMode && isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-        );
+        return <LoadingState />;
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        const numericFields = ['customer_id', 'recurrence_interval', 'total_count', 'due_date_offset', 'tax_rate'];
+        setFormData((prev) => ({
             ...prev,
-            [name]: ['customer_id', 'recurrence_interval', 'total_count', 'due_date_offset', 'tax_rate'].includes(name)
-                ? (value === '' ? (name === 'total_count' ? null : 0) : Number(value))
-                : value
+            [name]: numericFields.includes(name)
+                ? value === ''
+                    ? name === 'total_count'
+                        ? null
+                        : 0
+                    : Number(value)
+                : value,
         }));
 
         if (name === 'customer_id') {
-            const customer = customersData?.data?.find(c => c.id === Number(value));
-            if (customer) setCurrency(customer.currency || 'IDR');
-        }
-    };
-
-    // ... Item handlers (same as InvoiceForm) ...
-    const handleItemChange = (index: number, field: keyof InvoiceItemFormData, value: string | number) => {
-        setFormData((prev) => {
-            const items = [...prev.line_items];
-            const newValue = field === 'description' ? value : Number(value);
-            items[index] = { ...items[index], [field]: newValue };
-            if (field !== 'description') {
-                items[index].amount = items[index].quantity * items[index].unit_price;
+            const customer = customers?.find((c) => c.id === Number(value));
+            if (customer) {
+                setFormData((prev) => ({ ...prev, currency: customer.currency || 'IDR' }));
             }
-            return { ...prev, line_items: items };
-        });
-    };
-
-    const addItem = () => setFormData(prev => ({ ...prev, line_items: [...prev.line_items, { ...emptyItem }] }));
-    const removeItem = (index: number) => {
-        if (formData.line_items.length > 1) {
-            setFormData(prev => ({ ...prev, line_items: prev.line_items.filter((_, i) => i !== index) }));
         }
     };
-
-    const calculateSubtotal = () => formData.line_items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-    const calculateTax = () => (calculateSubtotal() * formData.tax_rate) / 100;
-    const calculateTotal = () => calculateSubtotal() + calculateTax();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Validation logic ...
+
+        const payload = { ...formData, line_items: items };
 
         try {
             if (isEditMode) {
-                await updateMutation.mutateAsync({ id: id!, data: formData });
+                await updateMutation.mutateAsync({ id: id!, data: payload });
             } else {
-                await createMutation.mutateAsync(formData);
+                await createMutation.mutateAsync(payload);
             }
-            router.push(`/customers/${formData.customer_id}`); // Redirect to customer details?
+            router.push(`/customers/${formData.customer_id}`);
         } catch (error) {
             console.error(error);
         }
     };
+
+    const currency = formData.currency;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -158,16 +156,29 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
                 <h2 className="text-lg font-semibold">Recurring Settings</h2>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Monthly Retainer" required />
-                    </div>
+                    <Input
+                        label="Title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        placeholder="e.g. Monthly Retainer"
+                        required
+                    />
                     <div className="space-y-2">
                         <Label>Customer</Label>
-                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            name="customer_id" value={formData.customer_id} onChange={handleChange} disabled={!!customerId && !isEditMode}>
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            name="customer_id"
+                            value={formData.customer_id}
+                            onChange={handleChange}
+                            disabled={!!customerId && !isEditMode}
+                        >
                             <option value={0}>Select Customer</option>
-                            {customersData?.data?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {customers?.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -175,8 +186,12 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
                 <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <Label>Frequency</Label>
-                        <select name="recurrence_type" value={formData.recurrence_type} onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <select
+                            name="recurrence_type"
+                            value={formData.recurrence_type}
+                            onChange={handleChange}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
                             <option value="monthly">Monthly</option>
                             <option value="weekly">Weekly</option>
                             <option value="bi-weekly">Bi-Weekly</option>
@@ -191,9 +206,20 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
                             <div className="space-y-2">
                                 <Label>Interval</Label>
                                 <div className="flex gap-2">
-                                    <Input type="number" name="recurrence_interval" value={formData.recurrence_interval} onChange={handleChange} min={1} className="w-20" />
-                                    <select name="recurrence_unit" value={formData.recurrence_unit} onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <Input
+                                        type="number"
+                                        name="recurrence_interval"
+                                        value={formData.recurrence_interval}
+                                        onChange={handleChange}
+                                        min={1}
+                                        className="w-20"
+                                    />
+                                    <select
+                                        name="recurrence_unit"
+                                        value={formData.recurrence_unit}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    >
                                         <option value="day">Days</option>
                                         <option value="week">Weeks</option>
                                         <option value="month">Months</option>
@@ -201,58 +227,128 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
                                     </select>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Total Count</Label>
-                                <Input type="number" name="total_count" value={formData.total_count ?? ''} onChange={handleChange} placeholder="Unlimited" min={1} />
-                            </div>
+                            <Input
+                                label="Total Count"
+                                type="number"
+                                name="total_count"
+                                value={formData.total_count ?? ''}
+                                onChange={handleChange}
+                                placeholder="Unlimited"
+                                min={1}
+                            />
                         </>
                     )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Input type="date" label="Start Date" name="start_date" value={formData.start_date} onChange={handleChange} required min={getTodayString()} />
-                    <Input type="number" label="Due Date Days Offset" name="due_date_offset" value={formData.due_date_offset} onChange={handleChange} min={0} hint="Days after invoice date" />
-                    <Input type="number" label="Tax Rate (%)" name="tax_rate" value={formData.tax_rate} onChange={handleChange} hint="Enter 0 for no tax" />
+                    <Input
+                        type="date"
+                        label="Start Date"
+                        name="start_date"
+                        value={formData.start_date}
+                        onChange={handleChange}
+                        required
+                        min={getTodayString()}
+                    />
+                    <Input
+                        type="number"
+                        label="Due Date Days Offset"
+                        name="due_date_offset"
+                        value={formData.due_date_offset}
+                        onChange={handleChange}
+                        min={0}
+                        hint="Days after invoice date"
+                    />
+                    <Input
+                        type="number"
+                        label="Tax Rate (%)"
+                        name="tax_rate"
+                        value={formData.tax_rate}
+                        onChange={handleChange}
+                        hint="Enter 0 for no tax"
+                    />
                 </div>
             </div>
 
-            {/* Line Items - Simplified copy from InvoiceForm */}
             <div className="bg-card rounded-lg border border-border p-6 space-y-6">
                 <div className="flex justify-between items-center">
                     <h2 className="text-lg font-semibold">Line Items</h2>
-                    <Button type="button" variant="secondary" size="sm" onClick={addItem}><Plus className="h-4 w-4" /> Add Item</Button>
+                    <Button type="button" variant="secondary" size="sm" onClick={addItem}>
+                        <Plus className="h-4 w-4" /> Add Item
+                    </Button>
                 </div>
 
                 <div className="space-y-4">
-                    {formData.line_items.map((item, index) => (
+                    {items.map((item, index) => (
                         <div key={index} className="grid grid-cols-12 gap-4 items-center">
                             <div className="col-span-5">
-                                <Input placeholder="Description" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} />
+                                <Input
+                                    placeholder="Description"
+                                    value={item.description}
+                                    onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                />
                             </div>
                             <div className="col-span-2">
-                                <Input type="number" placeholder="Qty" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} />
+                                <Input
+                                    type="number"
+                                    placeholder="Qty"
+                                    value={item.quantity}
+                                    onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                />
                             </div>
                             <div className="col-span-2">
-                                <Input type="number" placeholder="Price" value={item.unit_price} onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)} />
+                                <Input
+                                    type="number"
+                                    placeholder="Price"
+                                    value={item.unit_price}
+                                    onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                                />
                             </div>
-                            <div className="col-span-2 text-right font-medium">{formatCurrency(item.amount, currency)}</div>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}><X className="h-4 w-4" /></Button>
+                            <div className="col-span-2 text-right font-medium">
+                                {formatCurrency(item.amount, currency)}
+                            </div>
+                            <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                                <X className="h-4 w-4" />
+                            </Button>
                         </div>
                     ))}
                 </div>
 
                 <div className="flex justify-end pt-4 border-t">
                     <div className="w-64 space-y-2">
-                        <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatCurrency(calculateSubtotal(), currency)}</span></div>
-                        <div className="flex justify-between text-sm"><span>Tax ({formData.tax_rate}%)</span><span>{formatCurrency(calculateTax(), currency)}</span></div>
-                        <div className="flex justify-between text-lg font-bold"><span>Total</span><span>{formatCurrency(calculateTotal(), currency)}</span></div>
+                        <div className="flex justify-between text-sm">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(subtotal, currency)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span>Tax ({formData.tax_rate}%)</span>
+                            <span>{formatCurrency(tax, currency)}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold">
+                            <span>Total</span>
+                            <span>{formatCurrency(total, currency)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <div className="bg-card rounded-lg border border-border p-6">
+                <Textarea
+                    label="Notes"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    placeholder="Optional notes…"
+                />
+            </div>
+
             <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <Button type="submit" loading={isSubmitting}>{isEditMode ? 'Update Template' : 'Create Template'}</Button>
+                <Button type="button" variant="outline" onClick={() => router.back()}>
+                    Cancel
+                </Button>
+                <Button type="submit" loading={isSubmitting}>
+                    {isEditMode ? 'Update Template' : 'Create Template'}
+                </Button>
             </div>
         </form>
     );

@@ -1,23 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input, Label } from '@/components/ui';
-import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice } from '@/lib/hooks';
-import { InvoiceFormData, InvoiceItemFormData } from '@/types';
+import { Button, Input, Label, LoadingState, Textarea } from '@/components/ui';
+import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems } from '@/lib/hooks';
+import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
-import { Loader2, Plus, X } from 'lucide-react';
-
-const emptyItem: InvoiceItemFormData = {
-    description: '',
-    quantity: 1,
-    unit_price: 0,
-    amount: 0,
-};
+import { Plus, X } from 'lucide-react';
 
 interface InvoiceFormProps {
     invoiceId?: number;
 }
+
+type InvoiceFormState = Omit<InvoiceFormData, 'items'>;
 
 export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     const router = useRouter();
@@ -28,65 +23,61 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
 
     const isEditMode = !!invoiceId;
 
-    const [formData, setFormData] = useState<InvoiceFormData>({
+    const [formData, setFormData] = useState<InvoiceFormState>({
         customer_id: 0,
         invoice_date: getTodayString(),
         due_date: '',
         tax_rate: 0,
         notes: '',
         internal_notes: '',
-        items: [{ ...emptyItem }],
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
-
     const [currency, setCurrency] = useState('IDR');
+
+    const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
+        taxRate: formData.tax_rate,
+    });
 
     const searchParams = useSearchParams();
     const autoSelectCustomerId = searchParams.get('customer_id');
+    const existingInvoiceId = existingInvoiceData?.data?.id;
+    const customers = customersData?.data;
 
     useEffect(() => {
-        if (isEditMode && existingInvoiceData?.data) {
-            const invoice = existingInvoiceData.data;
-            // Only update if the invoice data has actually changed or hasn't been loaded yet
-            if (formData.customer_id === 0) {
-                setFormData({
-                    customer_id: invoice.customer_id,
-                    invoice_date: invoice.invoice_date.split('T')[0],
-                    due_date: invoice.due_date ? invoice.due_date.split('T')[0] : '',
-                    tax_rate: Number(invoice.tax_rate),
-                    notes: invoice.notes || '',
-                    internal_notes: invoice.internal_notes || '',
-                    items: invoice.items.map((item) => ({
-                        description: item.description,
-                        quantity: Number(item.quantity),
-                        unit_price: Number(item.unit_price),
-                        amount: Number(item.quantity) * Number(item.unit_price),
-                    })),
-                });
-                setCurrency(invoice.currency || 'IDR');
-            }
-        } else if (!isEditMode && autoSelectCustomerId && formData.customer_id === 0 && customersData?.data) {
-            // Auto-select customer from URL params
-            const customerId = Number(autoSelectCustomerId);
-            const customer = customersData.data.find(c => c.id === customerId);
+        if (!isEditMode || !existingInvoiceData?.data) return;
+        const invoice = existingInvoiceData.data;
+        setFormData({
+            customer_id: invoice.customer_id,
+            invoice_date: invoice.invoice_date.split('T')[0],
+            due_date: invoice.due_date ? invoice.due_date.split('T')[0] : '',
+            tax_rate: Number(invoice.tax_rate),
+            notes: invoice.notes || '',
+            internal_notes: invoice.internal_notes || '',
+        });
+        setCurrency(invoice.currency || 'IDR');
+        setItems(
+            invoice.items.map((item) => ({
+                description: item.description,
+                quantity: Number(item.quantity),
+                unit_price: Number(item.unit_price),
+                amount: Number(item.quantity) * Number(item.unit_price),
+            }))
+        );
+    }, [isEditMode, existingInvoiceId, existingInvoiceData, setItems]);
 
-            if (customer) {
-                setFormData(prev => ({ ...prev, customer_id: customerId }));
-                setCurrency(customer.currency || 'IDR');
-            }
+    useEffect(() => {
+        if (isEditMode || !autoSelectCustomerId || formData.customer_id !== 0 || !customers) return;
+        const customer = customers.find((c) => c.id === Number(autoSelectCustomerId));
+        if (customer) {
+            setFormData((prev) => ({ ...prev, customer_id: customer.id }));
+            setCurrency(customer.currency || 'IDR');
         }
-    }, [isEditMode, existingInvoiceData, formData.customer_id, autoSelectCustomerId, customersData]);
+    }, [isEditMode, autoSelectCustomerId, formData.customer_id, customers]);
 
-    const customers = customersData?.data || [];
     const isSubmitting = createInvoice.isPending || updateInvoice.isPending;
 
     if (isEditMode && isLoadingInvoice) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading invoice data...</span>
-            </div>
-        );
+        return <LoadingState message="Loading invoice data..." />;
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -97,50 +88,11 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         }));
 
         if (name === 'customer_id') {
-            const selectedCustomer = customers.find(c => c.id === Number(value));
+            const selectedCustomer = customers?.find((c) => c.id === Number(value));
             if (selectedCustomer) {
                 setCurrency(selectedCustomer.currency || 'IDR');
             }
         }
-    };
-
-    const handleItemChange = (index: number, field: keyof InvoiceItemFormData, value: string | number) => {
-        setFormData((prev) => {
-            const items = [...prev.items];
-            items[index] = {
-                ...items[index],
-                [field]: field === 'description' ? value : Number(value),
-            };
-            return { ...prev, items };
-        });
-    };
-
-    const addItem = () => {
-        setFormData((prev) => ({
-            ...prev,
-            items: [...prev.items, { ...emptyItem }],
-        }));
-    };
-
-    const removeItem = (index: number) => {
-        if (formData.items.length > 1) {
-            setFormData((prev) => ({
-                ...prev,
-                items: prev.items.filter((_, i) => i !== index),
-            }));
-        }
-    };
-
-    const calculateSubtotal = () => {
-        return formData.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    };
-
-    const calculateTax = () => {
-        return (calculateSubtotal() * formData.tax_rate) / 100;
-    };
-
-    const calculateTotal = () => {
-        return calculateSubtotal() + calculateTax();
     };
 
     const validate = (): boolean => {
@@ -152,7 +104,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         if (!formData.invoice_date) {
             newErrors.invoice_date = 'Invoice date is required';
         }
-        if (formData.items.length === 0 || formData.items.every((item) => !item.description)) {
+        if (items.length === 0 || items.every((item) => !item.description)) {
             newErrors.items = 'Please add at least one item';
         }
 
@@ -164,20 +116,20 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         e.preventDefault();
         if (!validate()) return;
 
+        const payload: InvoiceFormData = { ...formData, items };
+
         try {
             if (isEditMode && invoiceId) {
-                await updateInvoice.mutateAsync({ id: invoiceId, data: formData });
+                await updateInvoice.mutateAsync({ id: invoiceId, data: payload });
                 router.push(`/invoices/${invoiceId}`);
             } else {
-                await createInvoice.mutateAsync(formData);
+                await createInvoice.mutateAsync(payload);
                 router.push('/invoices');
             }
         } catch (error: unknown) {
-            console.error('Failed to save invoice:', error);
             if (error && typeof error === 'object' && 'errors' in error) {
                 const apiErrors = (error as { errors: Record<string, string[]> }).errors;
                 const newErrors: Record<string, string> = {};
-
                 Object.keys(apiErrors).forEach((key) => {
                     const message = apiErrors[key][0];
                     if (key.startsWith('items.')) {
@@ -186,7 +138,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         newErrors[key] = message;
                     }
                 });
-
                 setErrors(newErrors);
             }
         }
@@ -202,7 +153,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             </header>
 
             <form className="space-y-8" onSubmit={handleSubmit}>
-                {/* Invoice Details Section */}
                 <div className="bg-card rounded-lg border border-border p-6 space-y-6">
                     <h2 className="text-lg font-semibold text-foreground">Invoice Details</h2>
                     <div className="space-y-4">
@@ -216,7 +166,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <option value={0}>Select a customer</option>
-                                {customers.map((customer) => (
+                                {customers?.map((customer) => (
                                     <option key={customer.id} value={customer.id}>
                                         {customer.name}
                                     </option>
@@ -256,7 +206,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                     </div>
                 </div>
 
-                {/* Line Items Section */}
                 <div className="bg-card rounded-lg border border-border p-6 space-y-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-foreground">Line Items</h2>
@@ -268,7 +217,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                     {errors.items && <p className="text-sm text-destructive">{errors.items}</p>}
 
                     <div className="space-y-4">
-                        {/* Header */}
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
                             <span className="col-span-5">Description</span>
                             <span className="col-span-2 text-right">Qty</span>
@@ -277,31 +225,35 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                             <span className="col-span-1"></span>
                         </div>
 
-                        {/* Items */}
-                        {formData.items.map((item, index) => (
+                        {items.map((item, index) => (
                             <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                <input
-                                    type="text"
-                                    placeholder="Item description"
-                                    value={item.description}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'description', e.target.value)}
-                                    className="col-span-5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                />
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={item.quantity}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'quantity', e.target.value)}
-                                    className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={item.unit_price}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleItemChange(index, 'unit_price', e.target.value)}
-                                    className="col-span-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-right ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                />
+                                <div className="col-span-5">
+                                    <Input
+                                        type="text"
+                                        placeholder="Item description"
+                                        value={item.description}
+                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        className="text-right"
+                                        value={item.quantity}
+                                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        className="text-right"
+                                        value={item.unit_price}
+                                        onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                                    />
+                                </div>
                                 <span className="col-span-2 text-right font-medium">
                                     {formatCurrency(item.quantity * item.unit_price, currency)}
                                 </span>
@@ -310,7 +262,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => removeItem(index)}
-                                    disabled={formData.items.length === 1}
+                                    disabled={items.length === 1}
                                     className="col-span-1"
                                 >
                                     <X className="h-4 w-4" />
@@ -319,43 +271,36 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         ))}
                     </div>
 
-                    {/* Totals */}
                     <div className="flex justify-end border-t border-border pt-4">
                         <div className="w-full max-w-xs space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal:</span>
-                                <span>{formatCurrency(calculateSubtotal(), currency)}</span>
+                                <span>{formatCurrency(subtotal, currency)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Tax ({formData.tax_rate}%):</span>
-                                <span>{formatCurrency(calculateTax(), currency)}</span>
+                                <span>{formatCurrency(tax, currency)}</span>
                             </div>
                             <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
                                 <span>Total:</span>
-                                <span className="text-primary">{formatCurrency(calculateTotal(), currency)}</span>
+                                <span className="text-primary">{formatCurrency(total, currency)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Notes Section */}
                 <div className="bg-card rounded-lg border border-border p-6 space-y-4">
                     <h2 className="text-lg font-semibold text-foreground">Notes</h2>
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">Notes for Customer</Label>
-                        <textarea
-                            id="notes"
-                            name="notes"
-                            value={formData.notes || ''}
-                            onChange={handleChange}
-                            placeholder="Add any notes for the customer..."
-                            rows={3}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                    </div>
+                    <Textarea
+                        label="Notes for Customer"
+                        id="notes"
+                        name="notes"
+                        value={formData.notes || ''}
+                        onChange={handleChange}
+                        placeholder="Add any notes for the customer..."
+                    />
                 </div>
 
-                {/* Actions */}
                 <div className="flex justify-end gap-3">
                     <Button type="button" variant="outline" onClick={() => router.back()}>
                         Cancel

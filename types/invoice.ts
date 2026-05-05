@@ -28,6 +28,8 @@ export interface RecurringInvoice {
     last_generated_at: string | null;
     created_at: string;
     updated_at: string;
+    last_attempted_at: string | null;
+    is_overdue: boolean;
 }
 
 export interface InvoiceItem {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Input, Label } from '@/components/ui';
+import { Button, Input, Textarea } from '@/components/ui';
 import {
     Dialog,
     DialogContent,
@@ -19,6 +19,9 @@ interface SendInvoiceModalProps {
     customerEmail: string;
 }
 
+const buildDefaultMessage = (invoiceNumber: string) =>
+    `Dear Customer,\n\nPlease find attached the invoice ${invoiceNumber} for your recent purchase.\n\nThank you for your business.\n\nBest regards,\nTimedoor Team`;
+
 export function SendInvoiceModal({
     isOpen,
     onClose,
@@ -29,26 +32,14 @@ export function SendInvoiceModal({
     const sendInvoice = useSendInvoice();
     const [recipientEmail, setRecipientEmail] = useState(customerEmail);
     const [subject, setSubject] = useState(`Invoice ${invoiceNumber} from Timedoor`);
-    const [message, setMessage] = useState(
-        `Dear Customer,\n\nPlease find attached the invoice ${invoiceNumber} for your recent purchase.\n\nThank you for your business.\n\nBest regards,\nTimedoor Team`
-    );
+    const [message, setMessage] = useState(buildDefaultMessage(invoiceNumber));
 
     useEffect(() => {
-        if (isOpen) {
-            // Reset form when modal opens
-            if (recipientEmail !== customerEmail) {
-                setRecipientEmail(customerEmail);
-            }
-            const newSubject = `Invoice ${invoiceNumber} from Timedoor`;
-            if (subject !== newSubject) {
-                setSubject(newSubject);
-            }
-            const newMessage = `Dear Customer,\n\nPlease find attached the invoice ${invoiceNumber} for your recent purchase.\n\nThank you for your business.\n\nBest regards,\nTimedoor Team`;
-            if (message !== newMessage) {
-                setMessage(newMessage);
-            }
-        }
-    }, [isOpen, customerEmail, invoiceNumber, recipientEmail, subject, message]);
+        if (!isOpen) return;
+        setRecipientEmail(customerEmail);
+        setSubject(`Invoice ${invoiceNumber} from Timedoor`);
+        setMessage(buildDefaultMessage(invoiceNumber));
+    }, [isOpen, invoiceId, customerEmail, invoiceNumber]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,17 +80,14 @@ export function SendInvoiceModal({
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
                         required
                     />
-                    <div className="space-y-2">
-                        <Label htmlFor="message">Message</Label>
-                        <textarea
-                            id="message"
-                            value={message}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
-                            required
-                            rows={6}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                    </div>
+                    <Textarea
+                        label="Message"
+                        id="message"
+                        value={message}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+                        required
+                        rows={6}
+                    />
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>
                             Cancel

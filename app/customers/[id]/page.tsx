@@ -4,13 +4,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useCustomer, useDeleteCustomer } from '@/lib/hooks';
-import { Button, StatusBadge, ConfirmDialog, EmptyState } from '@/components/ui';
-import { CustomerModal } from '@/components/customers/CustomerModal';
+import { Button, StatusBadge, ConfirmDialog, EmptyState, LoadingState, ErrorState } from '@/components/ui';
 import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBuilder';
 import { RecurringInvoiceList } from '@/components/recurring/RecurringInvoiceList';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { CustomerListItem } from '@/types';
-import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye, Trash2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye } from 'lucide-react';
 
 export default function CustomerDetailPage() {
     const params = useParams();
@@ -31,24 +29,16 @@ export default function CustomerDetailPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading customer details...</span>
-            </div>
-        );
+        return <LoadingState message="Loading customer details..." />;
     }
 
     if (error || !customer) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
-                <h3 className="text-lg font-semibold text-destructive">Error loading customer</h3>
-                <p className="text-muted-foreground">The customer could not be found or an error occurred.</p>
-                <Button onClick={() => router.push('/customers')} variant="outline">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Customers
-                </Button>
-            </div>
+            <ErrorState
+                title="Error loading customer"
+                description="The customer could not be found or an error occurred."
+                action={{ label: 'Back to Customers', onClick: () => router.push('/customers') }}
+            />
         );
     }
 

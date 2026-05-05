@@ -2,20 +2,23 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useInvoices, useDeleteInvoice } from '@/lib/hooks';
-import { Button, EmptyState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
+import { useRouter } from 'next/navigation';
+import { useInvoices, useDeleteInvoice, useDebounce } from '@/lib/hooks';
+import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
-import { Loader2, FileText, Plus, Eye, Trash2 } from 'lucide-react';
+import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
 export function InvoiceList() {
+    const router = useRouter();
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 300);
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
     const [typeFilter, setTypeFilter] = useState<InvoiceType | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
 
     const { data, isLoading, error } = useInvoices({
-        search,
+        search: debouncedSearch,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
     });
@@ -29,21 +32,11 @@ export function InvoiceList() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] gap-3 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading invoices...</span>
-            </div>
-        );
+        return <LoadingState message="Loading invoices..." />;
     }
 
     if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 text-center">
-                <h3 className="text-lg font-semibold text-destructive">Error loading invoices</h3>
-                <p className="text-muted-foreground">Please try again later.</p>
-            </div>
-        );
+        return <ErrorState title="Error loading invoices" />;
     }
 
     const invoices = data?.data || [];
@@ -101,7 +94,7 @@ export function InvoiceList() {
                     description="Create your first invoice to start billing your customers."
                     action={{
                         label: "Create Invoice",
-                        onClick: () => window.location.href = '/invoices/new'
+                        onClick: () => router.push('/invoices/new')
                     }}
                 />
             ) : (

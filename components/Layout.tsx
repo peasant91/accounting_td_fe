@@ -4,17 +4,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, FileText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, X, Settings, ClipboardList, Shield, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/customers', label: 'Customers', icon: Users },
     { href: '/invoices', label: 'Invoices', icon: FileText },
+    { href: '/settings/exchange-rates', label: 'Exchange Rates', icon: Settings },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { user, logout } = useAuth();
+
+    if (pathname === '/login') return <>{children}</>;
 
     return (
         <div className="flex min-h-screen">
@@ -58,7 +63,50 @@ export function Layout({ children }: { children: ReactNode }) {
                             </Link>
                         );
                     })}
+                    <Link
+                        href="/audit"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                            "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                            pathname === '/audit'
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                    >
+                        <ClipboardList className="h-5 w-5" />
+                        <span>Audit Log</span>
+                    </Link>
+                    {user?.role === 'super_admin' && (
+                        <Link
+                            href="/admins"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={cn(
+                                "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                                pathname === '/admins'
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <Shield className="h-5 w-5" />
+                            <span>Admins</span>
+                        </Link>
+                    )}
                 </nav>
+                {user && (
+                    <div className="p-4 border-t border-border flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                        <button
+                            onClick={() => logout()}
+                            className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title="Sign out"
+                        >
+                            <LogOut className="h-4 w-4" />
+                        </button>
+                    </div>
+                )}
                 <div className="p-4 border-t border-border text-xs text-muted-foreground text-center">
                     © 2026 Timedoor
                 </div>

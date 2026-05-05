@@ -2,6 +2,7 @@
 
 import './globals.css';
 import { QueryProvider } from '@/lib/providers';
+import { AuthProvider } from '@/lib/auth';
 import { Layout } from '@/components/Layout';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -20,8 +21,10 @@ export default function RootLayout({
       </head>
       <body>
         <QueryProvider>
-          <Layout>{children}</Layout>
-          <Toaster />
+          <AuthProvider>
+            <Layout>{children}</Layout>
+            <Toaster />
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>
