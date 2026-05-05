@@ -48,10 +48,10 @@ pipeline {
                     sh 'docker run --rm -v "$(pwd)":/app -w /app --entrypoint npm node:23 run build'
 
                     sshagent(credentials: ['jenkins']) {
-                        sh "rsync -azP --delete -e 'ssh -p 22 -o StrictHostKeyChecking=no' . ${USER}@${HOST}:${projectDir}"
+                        sh "rsync -azP --delete --exclude='.htaccess' --exclude='ecosystem.config.js' --exclude='logs/' -e 'ssh -p 22 -o StrictHostKeyChecking=no' . ${USER}@${HOST}:${projectDir}"
 
-                        sh "ssh -p 22 -o StrictHostKeyChecking=no ${USER}@${HOST} \"cd ${projectDir} && ~/.nvm/versions/node/v22.15.1/bin/pm2 stop ${pm2Name}\""
-                        sh "ssh -p 22 -o StrictHostKeyChecking=no ${USER}@${HOST} \"cd ${projectDir} && ~/.nvm/versions/node/v22.15.1/bin/pm2 start ${pm2Name}\""
+                        sh "ssh -p 22 -o StrictHostKeyChecking=no ${USER}@${HOST} \"cd ${projectDir} && pm2-20 restart ${pm2Name}\""
+                        //sh "ssh -p 22 -o StrictHostKeyChecking=no ${USER}@${HOST} \"cd ${projectDir} && ~/.nvm/versions/node/v22.15.1/bin/pm2 start ${pm2Name}\""
                     }
                 }
             }
