@@ -61,6 +61,8 @@ export function useManualGenerateInvoice() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['recurring-invoices'] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         },
     });
 }
