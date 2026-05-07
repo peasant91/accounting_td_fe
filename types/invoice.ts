@@ -35,6 +35,7 @@ export interface RecurringInvoice {
 export interface InvoiceItem {
     id?: number;
     description: string;
+    notes?: string | null;
     quantity: number;
     unit_price: number;
     amount: number;
@@ -85,6 +86,7 @@ export interface InvoiceListItem {
 
 export interface InvoiceItemFormData {
     description: string;
+    notes?: string;
     quantity: number;
     unit_price: number;
     amount: number;
