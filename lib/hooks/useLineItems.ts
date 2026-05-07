@@ -5,6 +5,7 @@ import { InvoiceItemFormData } from '@/types';
 
 const emptyItem: InvoiceItemFormData = {
     description: '',
+    notes: '',
     quantity: 1,
     unit_price: 0,
     amount: 0,
@@ -14,6 +15,8 @@ export interface UseLineItemsOptions {
     initial?: InvoiceItemFormData[];
     taxRate?: number;
 }
+
+const STRING_FIELDS = new Set<keyof InvoiceItemFormData>(['description', 'notes']);
 
 export function useLineItems({ initial, taxRate = 0 }: UseLineItemsOptions = {}) {
     const [items, setItems] = useState<InvoiceItemFormData[]>(
@@ -30,7 +33,7 @@ export function useLineItems({ initial, taxRate = 0 }: UseLineItemsOptions = {})
                 const next = [...prev];
                 const updated: InvoiceItemFormData = {
                     ...next[index],
-                    [field]: field === 'description' ? value : Number(value),
+                    [field]: STRING_FIELDS.has(field) ? value : Number(value),
                 };
                 updated.amount = updated.quantity * updated.unit_price;
                 next[index] = updated;
