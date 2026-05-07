@@ -83,6 +83,7 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
             Array.isArray(data.line_items)
                 ? data.line_items.map((item: InvoiceItemFormData) => ({
                       description: item.description || '',
+                      notes: item.notes ?? '',
                       quantity: Number(item.quantity) || 1,
                       unit_price: Number(item.unit_price) || 0,
                       amount: (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
@@ -280,36 +281,48 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
 
                 <div className="space-y-4">
                     {items.map((item, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                            <div className="col-span-5">
-                                <Input
-                                    placeholder="Description"
-                                    value={item.description}
-                                    onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                />
+                        <div key={index} className="space-y-2">
+                            <div className="grid grid-cols-12 gap-4 items-center">
+                                <div className="col-span-5">
+                                    <Input
+                                        placeholder="Description"
+                                        value={item.description}
+                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <Input
+                                        type="number"
+                                        placeholder="Qty"
+                                        value={item.quantity}
+                                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <Input
+                                        type="number"
+                                        placeholder="Price"
+                                        value={item.unit_price}
+                                        onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                                    />
+                                </div>
+                                <div className="col-span-2 text-right font-medium">
+                                    {formatCurrency(item.amount, currency)}
+                                </div>
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
                             </div>
-                            <div className="col-span-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Qty"
-                                    value={item.quantity}
-                                    onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                />
+                            <div className="grid grid-cols-12 gap-4">
+                                <div className="col-span-11">
+                                    <Textarea
+                                        rows={2}
+                                        placeholder="Optional notes shown on the invoice"
+                                        value={item.notes ?? ''}
+                                        onChange={(e) => updateItem(index, 'notes', e.target.value)}
+                                    />
+                                </div>
                             </div>
-                            <div className="col-span-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Price"
-                                    value={item.unit_price}
-                                    onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
-                                />
-                            </div>
-                            <div className="col-span-2 text-right font-medium">
-                                {formatCurrency(item.amount, currency)}
-                            </div>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                                <X className="h-4 w-4" />
-                            </Button>
                         </div>
                     ))}
                 </div>
