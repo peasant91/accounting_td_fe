@@ -200,10 +200,17 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             <tbody className="divide-y divide-border">
                                 {invoice.items.map((item) => (
                                     <tr key={item.id}>
-                                        <td className="py-3 text-foreground">{item.description}</td>
-                                        <td className="py-3 text-right text-muted-foreground">{item.quantity}</td>
-                                        <td className="py-3 text-right text-muted-foreground">{formatCurrency(item.unit_price, invoice.currency)}</td>
-                                        <td className="py-3 text-right font-medium text-foreground">{formatCurrency(item.amount, invoice.currency)}</td>
+                                        <td className="py-3 text-foreground">
+                                            <div>{item.description}</div>
+                                            {item.notes && (
+                                                <div className="text-sm text-muted-foreground whitespace-pre-line mt-1">
+                                                    {item.notes}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="py-3 text-right text-muted-foreground align-top">{item.quantity}</td>
+                                        <td className="py-3 text-right text-muted-foreground align-top">{formatCurrency(item.unit_price, invoice.currency)}</td>
+                                        <td className="py-3 text-right font-medium text-foreground align-top">{formatCurrency(item.amount, invoice.currency)}</td>
                                     </tr>
                                 ))}
                             </tbody>
