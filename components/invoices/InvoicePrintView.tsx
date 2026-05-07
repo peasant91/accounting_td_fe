@@ -9,6 +9,7 @@ export interface PrintableInvoiceItem {
     quantity?: number;
     unit_price?: number;
     amount: number;
+    notes?: string | null;
 }
 
 export interface PrintableInvoice {
@@ -150,12 +151,19 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                         <tbody>
                             {invoice.items?.map((item, index) => (
                                 <tr key={index}>
-                                    <td className="py-2 px-2 text-red-500 border-b border-gray-200">{item.description}</td>
-                                    <td className="py-2 px-2 text-center text-red-500 border-b border-gray-200">{item.quantity ?? 1}</td>
-                                    <td className="py-2 px-2 text-right text-red-500 border-b border-gray-200">
+                                    <td className="py-2 px-2 text-red-500 border-b border-gray-200 align-top">
+                                        <div>{item.description}</div>
+                                        {item.notes && (
+                                            <div className="text-[9px] text-gray-600 whitespace-pre-line mt-1">
+                                                {item.notes}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="py-2 px-2 text-center text-red-500 border-b border-gray-200 align-top">{item.quantity ?? 1}</td>
+                                    <td className="py-2 px-2 text-right text-red-500 border-b border-gray-200 align-top">
                                         {formatCurrency(item.unit_price ?? item.amount, invoice.currency)}
                                     </td>
-                                    <td className="py-2 px-2 text-right text-red-500 border-b border-gray-200">
+                                    <td className="py-2 px-2 text-right text-red-500 border-b border-gray-200 align-top">
                                         {formatCurrency(item.amount, invoice.currency)}
                                     </td>
                                 </tr>
