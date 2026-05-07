@@ -58,6 +58,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         setItems(
             invoice.items.map((item) => ({
                 description: item.description,
+                notes: item.notes ?? '',
                 quantity: Number(item.quantity),
                 unit_price: Number(item.unit_price),
                 amount: Number(item.quantity) * Number(item.unit_price),
@@ -226,47 +227,59 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         </div>
 
                         {items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                <div className="col-span-5">
-                                    <Input
-                                        type="text"
-                                        placeholder="Item description"
-                                        value={item.description}
-                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                    />
+                            <div key={index} className="space-y-2">
+                                <div className="grid grid-cols-12 gap-4 items-center">
+                                    <div className="col-span-5">
+                                        <Input
+                                            type="text"
+                                            placeholder="Item description"
+                                            value={item.description}
+                                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            className="text-right"
+                                            value={item.quantity}
+                                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            className="text-right"
+                                            value={item.unit_price}
+                                            onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                                        />
+                                    </div>
+                                    <span className="col-span-2 text-right font-medium">
+                                        {formatCurrency(item.quantity * item.unit_price, currency)}
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeItem(index)}
+                                        disabled={items.length === 1}
+                                        className="col-span-1"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                                <div className="col-span-2">
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        className="text-right"
-                                        value={item.quantity}
-                                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                    />
+                                <div className="grid grid-cols-12 gap-4">
+                                    <div className="col-span-11">
+                                        <Textarea
+                                            rows={2}
+                                            placeholder="Optional notes shown on the invoice"
+                                            value={item.notes ?? ''}
+                                            onChange={(e) => updateItem(index, 'notes', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="col-span-2">
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        className="text-right"
-                                        value={item.unit_price}
-                                        onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
-                                    />
-                                </div>
-                                <span className="col-span-2 text-right font-medium">
-                                    {formatCurrency(item.quantity * item.unit_price, currency)}
-                                </span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeItem(index)}
-                                    disabled={items.length === 1}
-                                    className="col-span-1"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
                             </div>
                         ))}
                     </div>
