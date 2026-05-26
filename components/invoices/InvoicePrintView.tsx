@@ -129,7 +129,12 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                             </div>
                         </div>
                         <div className="flex-1 px-4 py-2 flex items-center">
-                            <span className="text-2xl font-bold">{formatCurrency(invoice.total, invoice.currency)}</span>
+                            <span className="text-2xl font-bold">
+                                {formatCurrency(
+                                    invoice.total + (invoice.use_unique_code ? (invoice.unique_code ?? 0) : 0),
+                                    invoice.currency
+                                )}
+                            </span>
                         </div>
                     </div>
                     {isEnabled('unique_number') && (
@@ -225,12 +230,42 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                                 <div className="mb-1 text-[10px]">
                                     <span className="text-gray-600">{labels.total_sum}</span>
                                 </div>
+                                {invoice.use_unique_code && invoice.subtotal !== undefined && (
+                                    <table className="w-full text-[10px] mb-2 text-right">
+                                        <tbody>
+                                            <tr>
+                                                <td className="text-gray-500 pr-4">Subtotal</td>
+                                                <td>{formatCurrency(invoice.subtotal, invoice.currency)}</td>
+                                            </tr>
+                                            {invoice.tax_amount !== undefined && invoice.tax_amount > 0 && (
+                                                <tr>
+                                                    <td className="text-gray-500 pr-4">Tax ({invoice.tax_rate ?? 0}%)</td>
+                                                    <td>{formatCurrency(invoice.tax_amount, invoice.currency)}</td>
+                                                </tr>
+                                            )}
+                                            <tr>
+                                                <td className="text-gray-500 pr-4 font-medium">
+                                                    Unique Code {String(invoice.unique_code ?? 0).padStart(3, '0')}
+                                                </td>
+                                                <td className="text-indigo-600">+ {formatCurrency(invoice.unique_code ?? 0, invoice.currency)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                )}
                                 <div className="bg-[#FFF9C4] border border-gray-300 px-4 py-2 font-bold text-lg text-right">
-                                    {formatCurrency(invoice.total, invoice.currency)}
+                                    {formatCurrency(
+                                        invoice.total + (invoice.use_unique_code ? (invoice.unique_code ?? 0) : 0),
+                                        invoice.currency
+                                    )}
                                 </div>
                                 {isEnabled('unique_number') && (
                                     <div className="mt-1 text-[8px] text-yellow-600 italic">
                                         {labels.important_unique_code}
+                                    </div>
+                                )}
+                                {invoice.use_unique_code && (
+                                    <div className="mt-1 text-[9px] text-gray-500 italic">
+                                        Include &ldquo;{String(invoice.unique_code ?? 0).padStart(3, '0')}&rdquo; in your transfer remarks.
                                     </div>
                                 )}
                             </div>

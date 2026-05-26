@@ -267,7 +267,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             invoice_date: invoice.invoice_date,
                             customer_name: invoice.customer.company_name || invoice.customer.name,
                             items: invoice.items,
+                            subtotal: invoice.subtotal,
+                            tax_rate: invoice.tax_rate,
+                            tax_amount: invoice.tax_amount,
                             total: invoice.total,
+                            use_unique_code: invoice.use_unique_code,
+                            unique_code: invoice.unique_code,
                             currency: invoice.currency,
                         }}
                     />
