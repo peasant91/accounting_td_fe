@@ -135,6 +135,11 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                                     invoice.currency
                                 )}
                             </span>
+                            {invoice.use_unique_code && (
+                                <div className="text-[9px] text-indigo-600 mt-1">
+                                    Includes unique code +{String(invoice.unique_code ?? 0).padStart(3, '0')}
+                                </div>
+                            )}
                         </div>
                     </div>
                     {isEnabled('unique_number') && (
@@ -230,7 +235,7 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                                 <div className="mb-1 text-[10px]">
                                     <span className="text-gray-600">{labels.total_sum}</span>
                                 </div>
-                                {invoice.use_unique_code && invoice.subtotal !== undefined && (
+                                {invoice.use_unique_code && invoice.subtotal !== undefined && invoice.unique_code !== undefined && (
                                     <table className="w-full text-[10px] mb-2 text-right">
                                         <tbody>
                                             <tr>
