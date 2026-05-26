@@ -30,6 +30,7 @@ export interface RecurringInvoice {
     updated_at: string;
     last_attempted_at: string | null;
     is_overdue: boolean;
+    use_unique_code: boolean;
 }
 
 export interface InvoiceItem {
