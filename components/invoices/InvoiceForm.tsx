@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input, Label, LoadingState, Textarea } from '@/components/ui';
+import { Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
@@ -30,6 +30,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         tax_rate: 0,
         notes: '',
         internal_notes: '',
+        use_unique_code: false,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
@@ -53,6 +54,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             tax_rate: Number(invoice.tax_rate),
             notes: invoice.notes || '',
             internal_notes: invoice.internal_notes || '',
+            use_unique_code: invoice.use_unique_code ?? false,
         });
         setCurrency(invoice.currency || 'IDR');
         setItems(
@@ -312,6 +314,27 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         onChange={handleChange}
                         placeholder="Add any notes for the customer..."
                     />
+                </div>
+
+                <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground">Payment Options</h2>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                            <Switch
+                                id="use-unique-code"
+                                checked={formData.use_unique_code ?? false}
+                                onCheckedChange={(checked) =>
+                                    setFormData((prev) => ({ ...prev, use_unique_code: checked }))
+                                }
+                            />
+                            <Label htmlFor="use-unique-code" className="cursor-pointer">
+                                Include unique code for bank transfer
+                            </Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground ml-12">
+                            Adds the last 3 digits of the invoice number to the displayed total for bank transfer identification.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-3">
