@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
+import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
+import * as itemTemplatesApi from '@/lib/api/item-templates';
 
 interface InvoiceFormProps {
     invoiceId?: number;
@@ -34,6 +35,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
+    const [templateSuggestions, setTemplateSuggestions] = useState<string[]>([]);
 
     const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
         taxRate: formData.tax_rate,
@@ -76,6 +78,14 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setCurrency(customer.currency || 'IDR');
         }
     }, [isEditMode, autoSelectCustomerId, formData.customer_id, customers]);
+
+    useEffect(() => {
+        itemTemplatesApi.list().then((res) => {
+            setTemplateSuggestions(res.data.map((t) => t.name));
+        }).catch(() => {
+            // fail silently — autocomplete is non-critical
+        });
+    }, []);
 
     const isSubmitting = createInvoice.isPending || updateInvoice.isPending;
 
@@ -232,11 +242,11 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                             <div key={index} className="space-y-2">
                                 <div className="grid grid-cols-12 gap-4 items-center">
                                     <div className="col-span-5">
-                                        <Input
-                                            type="text"
-                                            placeholder="Item description"
+                                        <Autocomplete
                                             value={item.description}
-                                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                            onChange={(value) => updateItem(index, 'description', value)}
+                                            suggestions={templateSuggestions}
+                                            placeholder="Item description"
                                         />
                                     </div>
                                     <div className="col-span-2">
