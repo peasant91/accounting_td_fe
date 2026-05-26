@@ -44,6 +44,13 @@ export function Autocomplete({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'ArrowDown' && !open && filtered.length > 0) {
+            e.preventDefault();
+            setOpen(true);
+            setActiveIndex(0);
+            return;
+        }
+
         if (!open) return;
 
         if (e.key === 'ArrowDown') {
@@ -56,6 +63,7 @@ export function Autocomplete({
             e.preventDefault();
             select(filtered[activeIndex]);
         } else if (e.key === 'Escape') {
+            e.preventDefault();
             setOpen(false);
         }
     };
@@ -86,7 +94,7 @@ export function Autocomplete({
                 <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md text-sm">
                     {filtered.map((suggestion, i) => (
                         <li
-                            key={suggestion}
+                            key={i}
                             onMouseDown={(e) => {
                                 e.preventDefault();
                                 select(suggestion);
