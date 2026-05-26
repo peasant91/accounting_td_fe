@@ -53,6 +53,8 @@ export interface Invoice {
     tax_rate: number;
     tax_amount: number;
     total: number;
+    use_unique_code: boolean;
+    unique_code: number;
     status: InvoiceStatus;
     type: InvoiceType;
     recurring_invoice_id: number | null;
@@ -99,6 +101,7 @@ export interface InvoiceFormData {
     tax_rate: number;
     notes?: string;
     internal_notes?: string;
+    use_unique_code?: boolean;
     items: InvoiceItemFormData[];
     send_immediately?: boolean;
 }

@@ -18,7 +18,12 @@ export interface PrintableInvoice {
     customer_name?: string;
     customer?: { company_name?: string | null; name?: string };
     items?: PrintableInvoiceItem[];
+    subtotal?: number;
+    tax_rate?: number;
+    tax_amount?: number;
     total: number;
+    use_unique_code?: boolean;
+    unique_code?: number;
     currency: string;
     sender?: {
         company_name: string;
