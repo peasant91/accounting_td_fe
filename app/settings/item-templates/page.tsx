@@ -1,25 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from 'sonner';
+import { FileText } from 'lucide-react';
 import { itemTemplatesApi } from '@/lib/api';
 import { ItemTemplate } from '@/types';
-import { Button, Input, LoadingState, ErrorState } from '@/components/ui';
+import { Button, Input, LoadingState, ErrorState, EmptyState } from '@/components/ui';
 
 export default function ItemTemplatesPage() {
     const [templates, setTemplates] = useState<ItemTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    // Add state
     const [addName, setAddName] = useState('');
     const [adding, setAdding] = useState(false);
 
-    // Edit state: which row is being edited
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState('');
+    const [saving, setSaving] = useState(false);
     const editInputRef = useRef<HTMLInputElement>(null);
 
-    const load = async () => {
+    const load = useCallback(async () => {
         setLoading(true);
         setError(false);
         try {
@@ -30,9 +31,9 @@ export default function ItemTemplatesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => { load(); }, [load]);
 
     // Focus edit input when edit starts
     useEffect(() => {
@@ -42,13 +43,17 @@ export default function ItemTemplatesPage() {
     }, [editingId]);
 
     const handleAdd = async () => {
+        if (adding) return;
         const name = addName.trim();
         if (!name) return;
         setAdding(true);
         try {
             await itemTemplatesApi.create({ name });
             setAddName('');
+            toast.success('Template added');
             await load();
+        } catch {
+            toast.error('Failed to add template');
         } finally {
             setAdding(false);
         }
@@ -65,30 +70,36 @@ export default function ItemTemplatesPage() {
     };
 
     const handleEditSave = async () => {
+        if (saving) return;
         if (editingId === null) return;
         const name = editName.trim();
         if (!name) return;
+        setSaving(true);
         try {
             await itemTemplatesApi.update(editingId, { name });
             setEditingId(null);
             setEditName('');
+            toast.success('Template updated');
             await load();
         } catch {
-            // keep edit mode open on error
+            toast.error('Failed to update template');
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await itemTemplatesApi.remove(id);
+            toast.success('Template deleted');
             await load();
         } catch {
-            // silent — list will reload unchanged
+            toast.error('Failed to delete template');
         }
     };
 
     if (loading) return <LoadingState message="Loading item templates..." />;
-    if (error) return <ErrorState title="Error loading item templates" />;
+    if (error) return <ErrorState title="Error loading item templates" action={{ label: 'Retry', onClick: load }} />;
 
     return (
         <div className="space-y-6">
@@ -99,7 +110,6 @@ export default function ItemTemplatesPage() {
                 </p>
             </header>
 
-            {/* Add new template */}
             <div className="rounded-lg border border-border bg-card p-4 flex items-end gap-3">
                 <div className="flex-1">
                     <Input
@@ -117,12 +127,13 @@ export default function ItemTemplatesPage() {
                 </Button>
             </div>
 
-            {/* Templates table */}
             <div className="rounded-lg border border-border bg-card overflow-hidden">
                 {templates.length === 0 ? (
-                    <p className="px-4 py-6 text-sm text-muted-foreground text-center">
-                        No item templates yet. Add one above.
-                    </p>
+                    <EmptyState
+                        icon={FileText}
+                        title="No item templates yet"
+                        description="Add one above to get started."
+                    />
                 ) : (
                     <table className="w-full">
                         <thead className="bg-muted/50 text-left text-sm">
@@ -141,7 +152,7 @@ export default function ItemTemplatesPage() {
                                                 value={editName}
                                                 onChange={(e) => setEditName(e.target.value)}
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleEditSave();
+                                                    if (e.key === 'Enter' && !saving) handleEditSave();
                                                     if (e.key === 'Escape') cancelEdit();
                                                 }}
                                                 className="w-full"
@@ -149,7 +160,7 @@ export default function ItemTemplatesPage() {
                                         </td>
                                         <td className="px-4 py-2">
                                             <div className="flex items-center gap-2">
-                                                <Button size="sm" onClick={handleEditSave} disabled={!editName.trim()}>
+                                                <Button size="sm" onClick={handleEditSave} disabled={saving || !editName.trim()}>
                                                     Save
                                                 </Button>
                                                 <Button size="sm" variant="ghost" onClick={cancelEdit}>
