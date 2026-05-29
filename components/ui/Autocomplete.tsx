@@ -4,14 +4,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from './input';
 
+type SuggestionItem = string | { label: string; value: string };
+
 interface AutocompleteProps {
     value: string;
     onChange: (value: string) => void;
-    suggestions: string[];
+    suggestions: SuggestionItem[];
     placeholder?: string;
     className?: string;
     inputClassName?: string;
     maxSuggestions?: number;
+}
+
+function normalise(s: SuggestionItem): { label: string; value: string } {
+    return typeof s === 'string' ? { label: s, value: s } : s;
 }
 
 export function Autocomplete({
@@ -28,9 +34,10 @@ export function Autocomplete({
     const containerRef = useRef<HTMLDivElement>(null);
 
     const filtered = value.trim()
-        ? suggestions.filter((s) =>
-              s.toLowerCase().includes(value.toLowerCase())
-          ).slice(0, maxSuggestions)
+        ? suggestions
+              .map(normalise)
+              .filter((s) => s.label.toLowerCase().includes(value.toLowerCase()))
+              .slice(0, maxSuggestions)
         : [];
 
     useEffect(() => {
@@ -38,8 +45,8 @@ export function Autocomplete({
         setOpen(filtered.length > 0);
     }, [filtered.length]);
 
-    const select = (suggestion: string) => {
-        onChange(suggestion);
+    const select = (item: { label: string; value: string }) => {
+        onChange(item.value);
         setOpen(false);
     };
 
@@ -92,12 +99,12 @@ export function Autocomplete({
             />
             {open && (
                 <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md text-sm">
-                    {filtered.map((suggestion, i) => (
+                    {filtered.map((item, i) => (
                         <li
                             key={i}
                             onMouseDown={(e) => {
                                 e.preventDefault();
-                                select(suggestion);
+                                select(item);
                             }}
                             className={cn(
                                 'cursor-pointer px-3 py-2 hover:bg-accent hover:text-accent-foreground',
@@ -105,7 +112,7 @@ export function Autocomplete({
                                 i < filtered.length - 1 && 'border-b border-border'
                             )}
                         >
-                            {suggestion}
+                            {item.label}
                         </li>
                     ))}
                 </ul>
