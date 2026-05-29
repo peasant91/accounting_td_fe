@@ -176,6 +176,7 @@ export default function ItemTemplatesPage() {
                                                     className="w-full"
                                                 />
                                                 <Textarea
+                                                    label="Description (optional)"
                                                     value={editDescription}
                                                     onChange={(e) => setEditDescription(e.target.value)}
                                                     placeholder="Description (optional)"
