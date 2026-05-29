@@ -35,7 +35,9 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
-    const [templateSuggestions, setTemplateSuggestions] = useState<string[]>([]);
+    const [templateSuggestions, setTemplateSuggestions] = useState<
+        Array<string | { label: string; value: string }>
+    >([]);
 
     const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
         taxRate: formData.tax_rate,
@@ -81,7 +83,12 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
 
     useEffect(() => {
         itemTemplatesApi.list().then((res) => {
-            setTemplateSuggestions(res.data.map((t) => t.name));
+            setTemplateSuggestions(
+                res.data.map((t) => ({
+                    label: t.name,
+                    value: t.description ?? t.name,
+                }))
+            );
         }).catch(() => {
             // fail silently — autocomplete is non-critical
         });
