@@ -8,5 +8,5 @@ export interface ItemTemplate {
 
 export interface ItemTemplateFormData {
     name: string;
-    description?: string;
+    description?: string | null;
 }

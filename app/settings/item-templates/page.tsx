@@ -83,7 +83,7 @@ export default function ItemTemplatesPage() {
         try {
             await itemTemplatesApi.update(editingId, {
                 name,
-                description: editDescription.trim() || undefined,
+                description: editDescription.trim() || null,
             });
             setEditingId(null);
             setEditName('');
@@ -179,7 +179,7 @@ export default function ItemTemplatesPage() {
                                                     label="Description (optional)"
                                                     value={editDescription}
                                                     onChange={(e) => setEditDescription(e.target.value)}
-                                                    placeholder="Description (optional)"
+                                                    placeholder="e.g. Monthly retainer for web development services"
                                                     rows={2}
                                                 />
                                             </div>
