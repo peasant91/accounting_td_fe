@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useInvoices, useDeleteInvoice, useDebounce } from '@/lib/hooks';
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
 import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
 import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
@@ -127,7 +127,14 @@ export function InvoiceList() {
                                         <TypeBadge type={invoice.type} />
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
-                                        {formatCurrency(invoice.total, invoice.currency)}
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            {formatCurrency(getTotalDue(invoice), invoice.currency)}
+                                            {invoice.use_unique_code && (
+                                                <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-normal whitespace-nowrap">
+                                                    + unique code
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <StatusBadge status={invoice.status} />

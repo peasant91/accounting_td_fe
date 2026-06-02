@@ -82,6 +82,8 @@ export interface InvoiceListItem {
     invoice_date: string;
     due_date: string | null;
     total: number;
+    use_unique_code: boolean;
+    unique_code: number | null;
     status: InvoiceStatus;
     type: InvoiceType;
     currency: string;
