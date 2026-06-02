@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useInvoices, useDeleteInvoice, useDebounce } from '@/lib/hooks';
+import { useInvoices, useDeleteInvoice, useDebounce, useCustomers } from '@/lib/hooks';
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
 import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
@@ -15,12 +15,17 @@ export function InvoiceList() {
     const debouncedSearch = useDebounce(search, 300);
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
     const [typeFilter, setTypeFilter] = useState<InvoiceType | ''>('');
+    const [customerFilter, setCustomerFilter] = useState<number | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
+
+    const { data: customersData } = useCustomers({ per_page: 200 });
+    const customers = customersData?.data ?? [];
 
     const { data, isLoading, error } = useInvoices({
         search: debouncedSearch,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
+        customer_id: customerFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
 
@@ -59,11 +64,23 @@ export function InvoiceList() {
             <div className="flex flex-col sm:flex-row gap-4">
                 <input
                     type="text"
-                    placeholder="Search invoices..."
+                    placeholder="Search by invoice no. or amount..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="flex h-10 w-full sm:max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+                <select
+                    value={customerFilter}
+                    onChange={(e) => setCustomerFilter(e.target.value ? Number(e.target.value) : '')}
+                    className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <option value="">All Customers</option>
+                    {customers.map((c) => (
+                        <option key={c.id} value={c.id}>
+                            {c.company_name || c.name}
+                        </option>
+                    ))}
+                </select>
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as InvoiceStatus | '')}
@@ -127,14 +144,9 @@ export function InvoiceList() {
                                         <TypeBadge type={invoice.type} />
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
-                                        <div className="flex items-center justify-end gap-1.5">
+                                        <span className={invoice.use_unique_code ? 'text-indigo-600' : ''}>
                                             {formatCurrency(getTotalDue(invoice), invoice.currency)}
-                                            {invoice.use_unique_code && (
-                                                <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-normal whitespace-nowrap">
-                                                    + unique code
-                                                </span>
-                                            )}
-                                        </div>
+                                        </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <StatusBadge status={invoice.status} />
