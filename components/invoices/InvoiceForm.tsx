@@ -36,7 +36,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
     const [templateSuggestions, setTemplateSuggestions] = useState<
-        Array<string | { label: string; value: string }>
+        Array<string | { label: string; value: string; data?: Record<string, unknown> }>
     >([]);
 
     const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
@@ -86,7 +86,8 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setTemplateSuggestions(
                 res.data.map((t) => ({
                     label: t.name,
-                    value: t.description ?? t.name,
+                    value: t.name,
+                    data: { notes: t.description ?? '' },
                 }))
             );
         }).catch(() => {
@@ -252,6 +253,12 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                         <Autocomplete
                                             value={item.description}
                                             onChange={(value) => updateItem(index, 'description', value)}
+                                            onSelect={(selected) => {
+                                                const notes = selected.data?.notes;
+                                                if (typeof notes === 'string' && notes) {
+                                                    updateItem(index, 'notes', notes);
+                                                }
+                                            }}
                                             suggestions={templateSuggestions}
                                             placeholder="Item description"
                                         />

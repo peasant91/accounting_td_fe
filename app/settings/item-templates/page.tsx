@@ -123,7 +123,7 @@ export default function ItemTemplatesPage() {
                 <div className="flex items-end gap-3">
                     <div className="flex-1">
                         <Input
-                            label="Name"
+                            label="Description"
                             placeholder="e.g. Web Development Services"
                             value={addName}
                             onChange={(e) => setAddName(e.target.value)}
@@ -135,7 +135,7 @@ export default function ItemTemplatesPage() {
                     </Button>
                 </div>
                 <Textarea
-                    label="Description (optional)"
+                    label="Notes (optional)"
                     placeholder="e.g. Monthly retainer for web development services"
                     value={addDescription}
                     onChange={(e) => setAddDescription(e.target.value)}
@@ -154,8 +154,8 @@ export default function ItemTemplatesPage() {
                     <table className="w-full">
                         <thead className="bg-muted/50 text-left text-sm">
                             <tr>
-                                <th className="px-4 py-3 font-medium text-muted-foreground">Name</th>
                                 <th className="px-4 py-3 font-medium text-muted-foreground">Description</th>
+                                <th className="px-4 py-3 font-medium text-muted-foreground">Notes</th>
                                 <th className="px-4 py-3 w-40"></th>
                             </tr>
                         </thead>
@@ -176,7 +176,7 @@ export default function ItemTemplatesPage() {
                                                     className="w-full"
                                                 />
                                                 <Textarea
-                                                    label="Description (optional)"
+                                                    label="Notes (optional)"
                                                     value={editDescription}
                                                     onChange={(e) => setEditDescription(e.target.value)}
                                                     placeholder="e.g. Monthly retainer for web development services"

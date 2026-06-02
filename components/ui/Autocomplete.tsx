@@ -4,11 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from './input';
 
-type SuggestionItem = string | { label: string; value: string };
+type SuggestionItem = string | { label: string; value: string; data?: Record<string, unknown> };
+type NormalisedItem = { label: string; value: string; data?: Record<string, unknown> };
 
 interface AutocompleteProps {
     value: string;
     onChange: (value: string) => void;
+    onSelect?: (item: NormalisedItem) => void;
     suggestions: SuggestionItem[];
     placeholder?: string;
     className?: string;
@@ -16,13 +18,14 @@ interface AutocompleteProps {
     maxSuggestions?: number;
 }
 
-function normalise(s: SuggestionItem): { label: string; value: string } {
+function normalise(s: SuggestionItem): NormalisedItem {
     return typeof s === 'string' ? { label: s, value: s } : s;
 }
 
 export function Autocomplete({
     value,
     onChange,
+    onSelect,
     suggestions,
     placeholder,
     className,
@@ -45,8 +48,9 @@ export function Autocomplete({
         setOpen(filtered.length > 0);
     }, [filtered.length]);
 
-    const select = (item: { label: string; value: string }) => {
+    const select = (item: NormalisedItem) => {
         onChange(item.value);
+        onSelect?.(item);
         setOpen(false);
     };
 
