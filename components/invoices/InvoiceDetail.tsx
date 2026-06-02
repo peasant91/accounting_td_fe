@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, ConfirmDialog, ErrorState, LoadingState, StatusBadge, TypeBadge } from '@/components/ui';
 import { useInvoice, useDeleteInvoice } from '@/lib/hooks';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency, getTotalDue } from '@/lib/utils';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal, InvoicePrintView } from '@/components/invoices';
 import { useInvoicePreview } from '@/lib/hooks/useInvoiceTemplates';
@@ -180,7 +180,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium text-muted-foreground">Amount Due</h3>
-                        <p className="text-3xl font-bold text-primary">{formatCurrency(invoice.total, invoice.currency)}</p>
+                        <p className="text-3xl font-bold text-primary">{formatCurrency(getTotalDue(invoice), invoice.currency)}</p>
                     </div>
                 </div>
 
@@ -229,9 +229,19 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             <span className="text-muted-foreground">Tax ({invoice.tax_rate}%)</span>
                             <span className="text-foreground">{formatCurrency(invoice.tax_amount, invoice.currency)}</span>
                         </div>
+                        {invoice.use_unique_code && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Unique Code +{String(invoice.unique_code ?? 0).padStart(3, '0')}
+                                </span>
+                                <span className="text-indigo-600">
+                                    +{formatCurrency(invoice.unique_code ?? 0, invoice.currency)}
+                                </span>
+                            </div>
+                        )}
                         <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
-                            <span>Total</span>
-                            <span className="text-primary">{formatCurrency(invoice.total, invoice.currency)}</span>
+                            <span>{invoice.use_unique_code ? 'Total to Pay' : 'Total'}</span>
+                            <span className="text-primary">{formatCurrency(getTotalDue(invoice), invoice.currency)}</span>
                         </div>
                     </div>
                 </div>
