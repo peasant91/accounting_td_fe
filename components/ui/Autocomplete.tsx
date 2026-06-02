@@ -95,7 +95,6 @@ export function Autocomplete({
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                onFocus={() => setOpen(filtered.length > 0)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className={inputClassName}
