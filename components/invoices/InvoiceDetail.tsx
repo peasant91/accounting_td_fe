@@ -64,7 +64,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 onClose={() => setIsMarkPaidModalOpen(false)}
                 invoiceId={invoice.id}
                 invoiceNumber={invoice.invoice_number}
-                totalAmount={invoice.total}
+                totalAmount={getTotalDue(invoice)}
                 currency={invoice.currency}
             />
             <CancelInvoiceModal
