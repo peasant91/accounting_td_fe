@@ -1,81 +1,83 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { useState } from 'react';
 import { Autocomplete } from './Autocomplete';
+
+function Controlled({ suggestions, onSelect }: {
+    suggestions: Parameters<typeof Autocomplete>[0]['suggestions'];
+    onSelect?: Parameters<typeof Autocomplete>[0]['onSelect'];
+}) {
+    const [value, setValue] = useState('');
+    return (
+        <Autocomplete
+            value={value}
+            onChange={setValue}
+            onSelect={onSelect}
+            suggestions={suggestions}
+        />
+    );
+}
 
 describe('Autocomplete — string suggestions (existing behaviour)', () => {
     it('inserts the string on select', () => {
-        const onChange = vi.fn();
-        render(
-            <Autocomplete
-                value="web"
-                onChange={onChange}
-                suggestions={['Web Development', 'Web Design']}
-            />
-        );
-        fireEvent.focus(screen.getByRole('textbox'));
+        const onSelect = vi.fn();
+        render(<Controlled suggestions={['Web Development', 'Web Design']} onSelect={onSelect} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'web' } });
+        expect(screen.getByText('Web Development')).toBeInTheDocument();
         fireEvent.mouseDown(screen.getByText('Web Development'));
-        expect(onChange).toHaveBeenCalledWith('Web Development');
+        expect(screen.getByRole('textbox')).toHaveValue('Web Development');
     });
 });
 
 describe('Autocomplete — {label, value} suggestions', () => {
     it('renders the label in the dropdown', () => {
         render(
-            <Autocomplete
-                value="web"
-                onChange={() => {}}
-                suggestions={[
-                    { label: 'Web Dev', value: 'Monthly web development retainer' },
-                ]}
-            />
+            <Controlled suggestions={[{ label: 'Web Dev', value: 'Monthly web development retainer' }]} />
         );
-        fireEvent.focus(screen.getByRole('textbox'));
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'web' } });
         expect(screen.getByText('Web Dev')).toBeInTheDocument();
     });
 
     it('inserts the value (not the label) on select', () => {
-        const onChange = vi.fn();
         render(
-            <Autocomplete
-                value="web"
-                onChange={onChange}
-                suggestions={[
-                    { label: 'Web Dev', value: 'Monthly web development retainer' },
-                ]}
-            />
+            <Controlled suggestions={[{ label: 'Web Dev', value: 'Monthly web development retainer' }]} />
         );
-        fireEvent.focus(screen.getByRole('textbox'));
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'web' } });
         fireEvent.mouseDown(screen.getByText('Web Dev'));
-        expect(onChange).toHaveBeenCalledWith('Monthly web development retainer');
+        expect(screen.getByRole('textbox')).toHaveValue('Monthly web development retainer');
     });
 
     it('filters by label text, not value', () => {
         render(
-            <Autocomplete
-                value="monthly"
-                onChange={() => {}}
-                suggestions={[
-                    { label: 'Web Dev', value: 'Monthly web development retainer' },
-                    { label: 'Hosting', value: 'Monthly hosting fee' },
-                ]}
-            />
+            <Controlled suggestions={[
+                { label: 'Web Dev', value: 'Monthly web development retainer' },
+                { label: 'Hosting', value: 'Monthly hosting fee' },
+            ]} />
         );
-        fireEvent.focus(screen.getByRole('textbox'));
-        // "monthly" matches the value text but NOT the labels — neither should show
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'monthly' } });
+        // "monthly" matches value text but NOT labels — neither should show
         expect(screen.queryByText('Web Dev')).not.toBeInTheDocument();
         expect(screen.queryByText('Hosting')).not.toBeInTheDocument();
     });
 
-    it('falls back gracefully when description is null (label used as value)', () => {
-        const onChange = vi.fn();
-        render(
-            <Autocomplete
-                value="host"
-                onChange={onChange}
-                suggestions={[{ label: 'Hosting', value: 'Hosting' }]}
-            />
-        );
-        fireEvent.focus(screen.getByRole('textbox'));
+    it('falls back gracefully when label equals value', () => {
+        render(<Controlled suggestions={[{ label: 'Hosting', value: 'Hosting' }]} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'host' } });
         fireEvent.mouseDown(screen.getByText('Hosting'));
-        expect(onChange).toHaveBeenCalledWith('Hosting');
+        expect(screen.getByRole('textbox')).toHaveValue('Hosting');
+    });
+
+    it('does not open on mount with pre-filled value', () => {
+        function Prefilled() {
+            const [value, setValue] = useState('Web Development Services');
+            return (
+                <Autocomplete
+                    value={value}
+                    onChange={setValue}
+                    suggestions={[{ label: 'Web Development Services', value: 'Web Development Services' }]}
+                />
+            );
+        }
+        render(<Prefilled />);
+        expect(screen.queryByText('Web Development Services', { selector: 'li' })).not.toBeInTheDocument();
     });
 });

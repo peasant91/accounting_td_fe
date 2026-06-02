@@ -35,6 +35,8 @@ export function Autocomplete({
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
+    const prevValue = useRef(value);
+    const justSelected = useRef(false);
 
     const filtered = value.trim()
         ? suggestions
@@ -43,15 +45,22 @@ export function Autocomplete({
               .slice(0, maxSuggestions)
         : [];
 
-    useEffect(() => {
-        setActiveIndex(-1);
-        setOpen(filtered.length > 0);
-    }, [filtered.length]);
+    // Open only when the user changes the value (not on mount or after a selection)
+    if (value !== prevValue.current) {
+        prevValue.current = value;
+        if (!justSelected.current) {
+            setOpen(value.trim().length > 0 && filtered.length > 0);
+            setActiveIndex(-1);
+        }
+        justSelected.current = false;
+    }
 
     const select = (item: NormalisedItem) => {
+        justSelected.current = true;
         onChange(item.value);
         onSelect?.(item);
         setOpen(false);
+        setActiveIndex(-1);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
