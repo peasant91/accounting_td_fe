@@ -9,6 +9,7 @@ import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBui
 import { RecurringInvoiceList } from '@/components/recurring/RecurringInvoiceList';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 export default function CustomerDetailPage() {
     const params = useParams();
@@ -20,6 +21,8 @@ export default function CustomerDetailPage() {
 
     const { data, isLoading, error, isRefetching } = useCustomer(id);
     const deleteCustomer = useDeleteCustomer();
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     const customer = data?.data;
 
@@ -155,12 +158,14 @@ export default function CustomerDetailPage() {
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-foreground">Invoices</h2>
-                    <Link href={`/invoices/new?customer_id=${customer.id}`}>
-                        <Button size="sm" variant="outline">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Invoice
-                        </Button>
-                    </Link>
+                    {!isSales && (
+                        <Link href={`/invoices/new?customer_id=${customer.id}`}>
+                            <Button size="sm" variant="outline">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Invoice
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {!customer.invoices || customer.invoices.length === 0 ? (
@@ -168,10 +173,10 @@ export default function CustomerDetailPage() {
                         icon={FileText}
                         title="No invoices yet"
                         description="This customer has no invoices."
-                        action={{
+                        action={!isSales ? {
                             label: "Create Invoice",
                             onClick: () => router.push(`/invoices/new?customer_id=${customer.id}`)
-                        }}
+                        } : undefined}
                     />
                 ) : (
                     <div className="bg-card rounded-lg border border-border overflow-hidden">

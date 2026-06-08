@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth';
 
 interface RecurringInvoiceListProps {
     customerId: number;
@@ -18,6 +19,8 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
     const deleteMutation = useDeleteRecurringInvoice();
     const generateMutation = useManualGenerateInvoice();
     const [terminatingId, setTerminatingId] = useState<number | null>(null);
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     const handleTerminate = async () => {
         if (terminatingId) {
@@ -54,12 +57,14 @@ export function RecurringInvoiceList({ customerId }: RecurringInvoiceListProps) 
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Recurring Invoices</h3>
-                <Link href={`/customers/${customerId}/recurring/new`}>
-                    <Button size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Schedule
-                    </Button>
-                </Link>
+                {!isSales && (
+                    <Link href={`/customers/${customerId}/recurring/new`}>
+                        <Button size="sm">
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Schedule
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {invoices.length === 0 ? (
