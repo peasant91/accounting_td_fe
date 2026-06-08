@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInvoices, useDeleteInvoice, useDebounce, useCustomers } from '@/lib/hooks';
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
 import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
@@ -28,6 +29,8 @@ export function InvoiceList() {
         customer_id: customerFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     const handleDelete = async () => {
         if (deletingInvoice) {
@@ -53,12 +56,14 @@ export function InvoiceList() {
                     <h1 className="text-3xl font-bold text-foreground">Invoices</h1>
                     <p className="text-muted-foreground mt-1">Manage and track your invoices</p>
                 </div>
-                <Link href="/invoices/new">
-                    <Button>
-                        <Plus className="h-4 w-4" />
-                        Create Invoice
-                    </Button>
-                </Link>
+                {!isSales && (
+                    <Link href="/invoices/new">
+                        <Button>
+                            <Plus className="h-4 w-4" />
+                            Create Invoice
+                        </Button>
+                    </Link>
+                )}
             </header>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -109,10 +114,10 @@ export function InvoiceList() {
                     icon={FileText}
                     title="No invoices yet"
                     description="Create your first invoice to start billing your customers."
-                    action={{
+                    action={!isSales ? {
                         label: "Create Invoice",
                         onClick: () => router.push('/invoices/new')
-                    }}
+                    } : undefined}
                 />
             ) : (
                 <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -158,7 +163,7 @@ export function InvoiceList() {
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            {invoice.status === 'draft' && (
+                                            {!isSales && invoice.status === 'draft' && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
