@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoicePreviewModal } from './InvoicePreviewModal';
+import { useAuth } from '@/lib/auth';
 
 interface InvoiceTemplateBuilderProps {
     customerId: number;
@@ -20,6 +21,8 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
     const updateMutation = useUpdateInvoiceTemplate();
     const [components, setComponents] = useState<InvoiceComponentConfig[]>([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     useEffect(() => {
         if (data?.data?.components) {
@@ -70,11 +73,13 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
                         <Eye className="mr-2 h-4 w-4" />
                         Preview
                     </Button>
-                    <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
-                        {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Changes
-                    </Button>
+                    {!isSales && (
+                        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+                            {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Save className="mr-2 h-4 w-4" />
+                            Save Changes
+                        </Button>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>
@@ -93,7 +98,7 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
                                 id={`switch-${component.key}`}
                                 checked={component.enabled}
                                 onCheckedChange={(checked) => handleToggle(component.key, checked)}
-                                disabled={component.required}
+                                disabled={component.required || isSales}
                             />
                         </div>
                     ))}
