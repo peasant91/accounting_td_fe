@@ -69,58 +69,62 @@ export function Layout({ children }: { children: ReactNode }) {
                         );
                     })}
 
-                    {/* Settings group */}
-                    <button
-                        onClick={() => setSettingsOpen((o) => !o)}
-                        className={cn(
-                            "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors w-full",
-                            pathname.startsWith('/settings')
-                                ? "text-foreground"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                    >
-                        <Settings className="h-5 w-5" />
-                        <span className="flex-1 text-left">Settings</span>
-                        <ChevronRight className={cn("h-4 w-4 transition-transform", settingsOpen && "rotate-90")} />
-                    </button>
-                    {settingsOpen && (
-                        <div className="flex flex-col gap-1 pl-4">
-                            {settingsItems.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = pathname === item.href;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={cn(
-                                            "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                                            isActive
-                                                ? "bg-primary text-primary-foreground"
-                                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                        )}
-                                    >
-                                        <Icon className="h-4 w-4" />
-                                        <span>{item.label}</span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    )}
+                    {user?.role !== 'sales' && (
+                        <>
+                            {/* Settings group */}
+                            <button
+                                onClick={() => setSettingsOpen((o) => !o)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors w-full",
+                                    pathname.startsWith('/settings')
+                                        ? "text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                )}
+                            >
+                                <Settings className="h-5 w-5" />
+                                <span className="flex-1 text-left">Settings</span>
+                                <ChevronRight className={cn("h-4 w-4 transition-transform", settingsOpen && "rotate-90")} />
+                            </button>
+                            {settingsOpen && (
+                                <div className="flex flex-col gap-1 pl-4">
+                                    {settingsItems.map((item) => {
+                                        const Icon = item.icon;
+                                        const isActive = pathname === item.href;
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={cn(
+                                                    "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                                                    isActive
+                                                        ? "bg-primary text-primary-foreground"
+                                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                )}
+                                            >
+                                                <Icon className="h-4 w-4" />
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
-                    <Link
-                        href="/audit"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                            "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                            pathname === '/audit'
-                                ? "bg-primary text-primary-foreground"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                    >
-                        <ClipboardList className="h-5 w-5" />
-                        <span>Audit Log</span>
-                    </Link>
+                            <Link
+                                href="/audit"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                                    pathname === '/audit'
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                )}
+                            >
+                                <ClipboardList className="h-5 w-5" />
+                                <span>Audit Log</span>
+                            </Link>
+                        </>
+                    )}
                     {user?.role === 'super_admin' && (
                         <Link
                             href="/admins"
