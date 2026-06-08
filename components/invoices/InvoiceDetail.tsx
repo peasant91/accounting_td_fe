@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, ConfirmDialog, ErrorState, LoadingState, StatusBadge, TypeBadge } from '@/components/ui';
 import { useInvoice, useDeleteInvoice } from '@/lib/hooks';
 import { formatDate, formatCurrency, getTotalDue } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal, InvoicePrintView } from '@/components/invoices';
 import { useInvoicePreview } from '@/lib/hooks/useInvoiceTemplates';
@@ -19,6 +20,8 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     const { data: invoiceData, isLoading, error } = useInvoice(invoiceId);
     const deleteInvoice = useDeleteInvoice();
     const invoice = invoiceData?.data;
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     const { data: previewData } = useInvoicePreview(invoice?.customer?.id || 0, !!invoice?.customer?.id);
     const preview = previewData?.data;
@@ -98,39 +101,43 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        {invoice.status === 'draft' && (
+                        {!isSales && (
                             <>
-                                <Button variant="ghost" onClick={() => setIsDeleteOpen(true)}>Delete</Button>
-                                <Button variant="secondary" onClick={handleEdit}>Edit</Button>
-                                <Button onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
+                                {invoice.status === 'draft' && (
+                                    <>
+                                        <Button variant="ghost" onClick={() => setIsDeleteOpen(true)}>Delete</Button>
+                                        <Button variant="secondary" onClick={handleEdit}>Edit</Button>
+                                        <Button onClick={() => setIsSendModalOpen(true)}>Send to Customer</Button>
+                                    </>
+                                )}
+                                {invoice.status === 'sent' && (
+                                    <>
+                                        <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
+                                        <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Resend Info</Button>
+                                        <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
+                                    </>
+                                )}
+                                {invoice.status === 'overdue' && (
+                                    <>
+                                        <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
+                                        <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Send Reminder</Button>
+                                        <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
+                                    </>
+                                )}
+                                {invoice.status === 'paid' && (
+                                    <Button
+                                        variant="secondary"
+                                        disabled={!invoice.payment_proof_url}
+                                        onClick={() => {
+                                            if (invoice.payment_proof_url) {
+                                                window.open(invoice.payment_proof_url, '_blank', 'noreferrer');
+                                            }
+                                        }}
+                                    >
+                                        View Proof of payment
+                                    </Button>
+                                )}
                             </>
-                        )}
-                        {invoice.status === 'sent' && (
-                            <>
-                                <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
-                                <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Resend Info</Button>
-                                <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
-                            </>
-                        )}
-                        {invoice.status === 'overdue' && (
-                            <>
-                                <Button variant="outline" onClick={() => setIsCancelModalOpen(true)}>Cancel Invoice</Button>
-                                <Button variant="secondary" onClick={() => setIsSendModalOpen(true)}>Send Reminder</Button>
-                                <Button onClick={() => setIsMarkPaidModalOpen(true)}>Mark as Paid</Button>
-                            </>
-                        )}
-                        {invoice.status === 'paid' && (
-                            <Button
-                                variant="secondary"
-                                disabled={!invoice.payment_proof_url}
-                                onClick={() => {
-                                    if (invoice.payment_proof_url) {
-                                        window.open(invoice.payment_proof_url, '_blank', 'noreferrer');
-                                    }
-                                }}
-                            >
-                                View Proof of payment
-                            </Button>
                         )}
                         <Button variant="ghost" onClick={handlePrint}>
                             <Printer className="h-4 w-4" />
