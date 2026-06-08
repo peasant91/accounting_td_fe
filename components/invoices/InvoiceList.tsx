@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useInvoices, useDeleteInvoice, useDebounce } from '@/lib/hooks';
+import { useInvoices, useDeleteInvoice, useDebounce, useCustomers } from '@/lib/hooks';
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
 import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
@@ -15,14 +16,21 @@ export function InvoiceList() {
     const debouncedSearch = useDebounce(search, 300);
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
     const [typeFilter, setTypeFilter] = useState<InvoiceType | ''>('');
+    const [customerFilter, setCustomerFilter] = useState<number | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
+
+    const { data: customersData } = useCustomers({ per_page: 200 });
+    const customers = customersData?.data ?? [];
 
     const { data, isLoading, error } = useInvoices({
         search: debouncedSearch,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
+        customer_id: customerFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
+    const { user } = useAuth();
+    const isSales = user?.role === 'sales';
 
     const handleDelete = async () => {
         if (deletingInvoice) {
@@ -48,22 +56,36 @@ export function InvoiceList() {
                     <h1 className="text-3xl font-bold text-foreground">Invoices</h1>
                     <p className="text-muted-foreground mt-1">Manage and track your invoices</p>
                 </div>
-                <Link href="/invoices/new">
-                    <Button>
-                        <Plus className="h-4 w-4" />
-                        Create Invoice
-                    </Button>
-                </Link>
+                {!isSales && (
+                    <Link href="/invoices/new">
+                        <Button>
+                            <Plus className="h-4 w-4" />
+                            Create Invoice
+                        </Button>
+                    </Link>
+                )}
             </header>
 
             <div className="flex flex-col sm:flex-row gap-4">
                 <input
                     type="text"
-                    placeholder="Search invoices..."
+                    placeholder="Search by invoice no. or amount..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="flex h-10 w-full sm:max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+                <select
+                    value={customerFilter}
+                    onChange={(e) => setCustomerFilter(e.target.value ? Number(e.target.value) : '')}
+                    className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <option value="">All Customers</option>
+                    {customers.map((c) => (
+                        <option key={c.id} value={c.id}>
+                            {c.company_name || c.name}
+                        </option>
+                    ))}
+                </select>
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as InvoiceStatus | '')}
@@ -92,10 +114,10 @@ export function InvoiceList() {
                     icon={FileText}
                     title="No invoices yet"
                     description="Create your first invoice to start billing your customers."
-                    action={{
+                    action={!isSales ? {
                         label: "Create Invoice",
                         onClick: () => router.push('/invoices/new')
-                    }}
+                    } : undefined}
                 />
             ) : (
                 <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -127,7 +149,9 @@ export function InvoiceList() {
                                         <TypeBadge type={invoice.type} />
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
-                                        {formatCurrency(invoice.total, invoice.currency)}
+                                        <span className={invoice.use_unique_code ? 'text-indigo-600' : ''}>
+                                            {formatCurrency(getTotalDue(invoice), invoice.currency)}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <StatusBadge status={invoice.status} />
@@ -139,7 +163,7 @@ export function InvoiceList() {
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            {invoice.status === 'draft' && (
+                                            {!isSales && invoice.status === 'draft' && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

@@ -1,37 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# accounting-frontend
 
-## Getting Started
+Next.js 14 frontend for the Timedoor internal accounting application.
 
-First, run the development server:
+## Setup
+
+```bash
+npm install
+cp .env.local.example .env.local  # or copy .env.local and adjust
+```
+
+## Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Opens at `http://localhost:3000`. Expects backend at `http://localhost:8000` (configure via `.env.local`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable                  | Description                        |
+| ------------------------- | ---------------------------------- |
+| `NEXT_PUBLIC_API_URL`     | Backend API base URL               |
+| `NEXT_PUBLIC_SANCTUM_URL` | Backend root URL for Sanctum CSRF  |
+| `BACKEND_INTERNAL_URL`    | Server-side fetch URL (Docker only) |
 
-## Learn More
+## Test
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run test        # unit tests (Vitest)
+npm run test:e2e    # end-to-end (Playwright)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Docker
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run alongside backend via the root `docker-compose.yml`:
 
-## Deploy on Vercel
+```bash
+cd ..
+docker compose up --build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Frontend available at `http://localhost:3100`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# accounting_td_fe
+## Companion
+
+Backend lives at [`accounting-backend/`](../accounting-backend/).

@@ -10,13 +10,13 @@ export async function getAdmin(id: number): Promise<SingleResponse<Admin>> {
 }
 
 export async function createAdmin(data: {
-    name: string; email: string; password: string; role: 'super_admin' | 'admin';
+    name: string; email: string; password: string; role: 'super_admin' | 'admin' | 'sales';
 }): Promise<SingleResponse<Admin>> {
     return apiClient.post<SingleResponse<Admin>>('/admins', data);
 }
 
 export async function updateAdmin(id: number, data: Partial<{
-    name: string; email: string; password: string; role: 'super_admin' | 'admin';
+    name: string; email: string; password: string; role: 'super_admin' | 'admin' | 'sales';
 }>): Promise<SingleResponse<Admin>> {
     return apiClient.put<SingleResponse<Admin>>(`/admins/${id}`, data);
 }

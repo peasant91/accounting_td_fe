@@ -8,3 +8,4 @@ export function cn(...inputs: ClassValue[]) {
 // Re-export all utilities from the utils folder
 export * from './utils/formatters';
 export * from './utils/validators';
+export * from './utils/invoice';

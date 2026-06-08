@@ -6,3 +6,4 @@ export * as currencyRatesApi from './currency-rates';
 export * as auth from './auth';
 export * as admins from './admins';
 export * as audit from './audit';
+export * as itemTemplatesApi from './item-templates';

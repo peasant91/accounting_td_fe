@@ -25,7 +25,7 @@ export function AdminFormDialog({
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState<'super_admin' | 'admin'>('admin');
+    const [role, setRole] = useState<'super_admin' | 'admin' | 'sales'>('admin');
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -106,11 +106,12 @@ export function AdminFormDialog({
                         <select
                             id="admin-role"
                             value={role}
-                            onChange={e => setRole(e.target.value as 'super_admin' | 'admin')}
+                            onChange={e => setRole(e.target.value as 'super_admin' | 'admin' | 'sales')}
                             className="border rounded px-3 py-2 w-full bg-background"
                         >
                             <option value="admin">admin</option>
                             <option value="super_admin">super_admin</option>
+                            <option value="sales">sales</option>
                         </select>
                     </div>
                     {error && (

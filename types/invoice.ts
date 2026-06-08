@@ -30,6 +30,7 @@ export interface RecurringInvoice {
     updated_at: string;
     last_attempted_at: string | null;
     is_overdue: boolean;
+    use_unique_code: boolean;
 }
 
 export interface InvoiceItem {
@@ -53,6 +54,8 @@ export interface Invoice {
     tax_rate: number;
     tax_amount: number;
     total: number;
+    use_unique_code: boolean;
+    unique_code: number;
     status: InvoiceStatus;
     type: InvoiceType;
     recurring_invoice_id: number | null;
@@ -79,6 +82,8 @@ export interface InvoiceListItem {
     invoice_date: string;
     due_date: string | null;
     total: number;
+    use_unique_code: boolean;
+    unique_code: number | null;
     status: InvoiceStatus;
     type: InvoiceType;
     currency: string;
@@ -99,6 +104,7 @@ export interface InvoiceFormData {
     tax_rate: number;
     notes?: string;
     internal_notes?: string;
+    use_unique_code?: boolean;
     items: InvoiceItemFormData[];
     send_immediately?: boolean;
 }

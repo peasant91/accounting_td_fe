@@ -18,6 +18,7 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-medium">Sub-pages</h2>
                 <ul className="space-y-1 text-sm">
                     <li><Link href="/settings/exchange-rates" className="underline">Exchange rates</Link></li>
+                    <li><Link href="/settings/item-templates" className="underline">Item templates</Link></li>
                 </ul>
             </section>
 

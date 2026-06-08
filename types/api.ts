@@ -72,7 +72,7 @@ export interface ActivityItem {
     created_at: string;
 }
 
-export type UserRole = 'super_admin' | 'admin';
+export type UserRole = 'super_admin' | 'admin' | 'sales';
 
 export interface User {
     id: number;

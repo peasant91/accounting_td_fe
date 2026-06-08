@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input, Label, LoadingState, Textarea } from '@/components/ui';
+import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
+import * as itemTemplatesApi from '@/lib/api/item-templates';
 
 interface InvoiceFormProps {
     invoiceId?: number;
@@ -30,9 +31,13 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         tax_rate: 0,
         notes: '',
         internal_notes: '',
+        use_unique_code: false,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
+    const [templateSuggestions, setTemplateSuggestions] = useState<
+        Array<string | { label: string; value: string; data?: Record<string, unknown> }>
+    >([]);
 
     const { items, setItems, updateItem, addItem, removeItem, subtotal, tax, total } = useLineItems({
         taxRate: formData.tax_rate,
@@ -53,6 +58,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             tax_rate: Number(invoice.tax_rate),
             notes: invoice.notes || '',
             internal_notes: invoice.internal_notes || '',
+            use_unique_code: invoice.use_unique_code ?? false,
         });
         setCurrency(invoice.currency || 'IDR');
         setItems(
@@ -74,6 +80,20 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setCurrency(customer.currency || 'IDR');
         }
     }, [isEditMode, autoSelectCustomerId, formData.customer_id, customers]);
+
+    useEffect(() => {
+        itemTemplatesApi.list().then((res) => {
+            setTemplateSuggestions(
+                res.data.map((t) => ({
+                    label: t.name,
+                    value: t.name,
+                    data: { notes: t.description ?? '' },
+                }))
+            );
+        }).catch(() => {
+            // fail silently — autocomplete is non-critical
+        });
+    }, []);
 
     const isSubmitting = createInvoice.isPending || updateInvoice.isPending;
 
@@ -230,11 +250,17 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                             <div key={index} className="space-y-2">
                                 <div className="grid grid-cols-12 gap-4 items-center">
                                     <div className="col-span-5">
-                                        <Input
-                                            type="text"
-                                            placeholder="Item description"
+                                        <Autocomplete
                                             value={item.description}
-                                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                            onChange={(value) => updateItem(index, 'description', value)}
+                                            onSelect={(selected) => {
+                                                const notes = selected.data?.notes;
+                                                if (typeof notes === 'string' && notes) {
+                                                    updateItem(index, 'notes', notes);
+                                                }
+                                            }}
+                                            suggestions={templateSuggestions}
+                                            placeholder="Item description"
                                         />
                                     </div>
                                     <div className="col-span-2">
@@ -312,6 +338,27 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         onChange={handleChange}
                         placeholder="Add any notes for the customer..."
                     />
+                </div>
+
+                <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground">Payment Options</h2>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                            <Switch
+                                id="use-unique-code"
+                                checked={formData.use_unique_code ?? false}
+                                onCheckedChange={(checked) =>
+                                    setFormData((prev) => ({ ...prev, use_unique_code: checked }))
+                                }
+                            />
+                            <Label htmlFor="use-unique-code" className="cursor-pointer">
+                                Include unique code for bank transfer
+                            </Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground ml-12">
+                            Adds the last 3 digits of the invoice number to the displayed total for bank transfer identification.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-3">
