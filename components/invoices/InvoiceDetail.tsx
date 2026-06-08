@@ -258,7 +258,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <div className="space-y-4 border-t border-border pt-6">
                         {invoice.notes && (
                             <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">Notes for Customer</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground">Internal Notes</h3>
                                 <p className="text-foreground">{invoice.notes}</p>
                             </div>
                         )}
