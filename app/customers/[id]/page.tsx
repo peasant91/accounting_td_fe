@@ -3,12 +3,13 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCustomer, useDeleteCustomer } from '@/lib/hooks';
+import { useCustomer, useDeleteCustomer, useCustomerOrders } from '@/lib/hooks';
 import { Button, StatusBadge, ConfirmDialog, EmptyState, LoadingState, ErrorState } from '@/components/ui';
 import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBuilder';
 import { RecurringInvoiceList } from '@/components/recurring/RecurringInvoiceList';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye } from 'lucide-react';
+import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/types/order';
+import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 export default function CustomerDetailPage() {
@@ -23,6 +24,8 @@ export default function CustomerDetailPage() {
     const deleteCustomer = useDeleteCustomer();
     const { user } = useAuth();
     const isSales = user?.role === 'sales';
+    const { data: ordersData } = useCustomerOrders(id);
+    const customerOrders = ordersData?.data ?? [];
 
     const customer = data?.data;
 
@@ -240,6 +243,80 @@ export default function CustomerDetailPage() {
             </section>
 
 
+
+            {/* Orders Section */}
+            <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-foreground">Orders</h2>
+                    {!isSales && (
+                        <Link href={`/orders/new?customer_id=${customer.id}`}>
+                            <Button size="sm" variant="outline">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Order
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+
+                {customerOrders.length === 0 ? (
+                    <EmptyState
+                        icon={ClipboardList}
+                        title="No orders yet"
+                        description="This customer has no orders."
+                        action={!isSales ? {
+                            label: "New Order",
+                            onClick: () => router.push(`/orders/new?customer_id=${customer.id}`)
+                        } : undefined}
+                    />
+                ) : (
+                    <div className="bg-card rounded-lg border border-border overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-muted/50">
+                                <tr>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Title</th>
+                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Total</th>
+                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Paid</th>
+                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Remaining</th>
+                                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
+                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {customerOrders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-muted/30 transition-colors">
+                                        <td className="px-4 py-3">
+                                            <Link href={`/orders/${order.id}`} className="text-sm font-medium text-primary hover:underline">
+                                                {order.title}
+                                            </Link>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-right font-medium">
+                                            {formatCurrency(parseFloat(order.total_price), customer.currency ?? 'IDR')}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-right text-green-700">
+                                            {formatCurrency(parseFloat(order.total_paid), customer.currency ?? 'IDR')}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-right text-orange-600">
+                                            {formatCurrency(parseFloat(order.remaining_balance), customer.currency ?? 'IDR')}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
+                                                {ORDER_STATUS_LABELS[order.status]}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <Link href={`/orders/${order.id}`}>
+                                                <Button size="icon" variant="ghost">
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
             <ConfirmDialog
                 open={isDeleteModalOpen}

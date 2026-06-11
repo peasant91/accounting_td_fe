@@ -9,3 +9,4 @@ export * as audit from './audit';
 export * as itemTemplatesApi from './item-templates';
 export * as invoiceTypesApi from './invoice-types';
 export * as invoiceSettingsApi from './invoice-settings';
+export * as ordersApi from './orders';

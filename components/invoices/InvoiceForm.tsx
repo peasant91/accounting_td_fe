@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
-import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useInvoiceSettings } from '@/lib/hooks';
+import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useInvoiceSettings, useOrder } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
@@ -37,6 +37,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         notes: '',
         internal_notes: '',
         use_unique_code: false,
+        order_id: null,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [currency, setCurrency] = useState('IDR');
@@ -50,6 +51,12 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
 
     const searchParams = useSearchParams();
     const autoSelectCustomerId = searchParams.get('customer_id');
+    const autoSelectOrderId = searchParams.get('order_id');
+    const orderId = autoSelectOrderId ? Number(autoSelectOrderId) : 0;
+
+    const { data: orderData } = useOrder(orderId);
+    const contextOrder = orderData?.data ?? null;
+
     const existingInvoiceId = existingInvoiceData?.data?.id;
     const customers = customersData?.data;
 
@@ -86,6 +93,20 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setCurrency(customer.currency || 'IDR');
         }
     }, [isEditMode, autoSelectCustomerId, formData.customer_id, customers]);
+
+    // Pre-fill from order context
+    useEffect(() => {
+        if (isEditMode || !contextOrder || formData.order_id === contextOrder.id) return;
+        setFormData((prev) => ({
+            ...prev,
+            order_id: contextOrder.id,
+            customer_id: contextOrder.customer_id,
+            invoice_type_id: contextOrder.invoice_type_id,
+        }));
+        if (contextOrder.customer?.currency) {
+            setCurrency(contextOrder.customer.currency);
+        }
+    }, [isEditMode, contextOrder, formData.order_id]);
 
     useEffect(() => {
         if (!isEditMode && settingsData?.data?.default_note && !formData.notes) {
@@ -186,6 +207,17 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                 </p>
             </header>
 
+            {contextOrder && (
+                <div className="border border-indigo-200 bg-indigo-50 rounded-lg p-4 text-sm space-y-1">
+                    <p className="font-semibold text-indigo-900">Order: {contextOrder.title}</p>
+                    <div className="flex flex-wrap gap-4 text-indigo-700">
+                        <span>Total: {formatCurrency(parseFloat(contextOrder.total_price), contextOrder.customer?.currency ?? 'IDR')}</span>
+                        <span>Paid: {formatCurrency(parseFloat(contextOrder.total_paid), contextOrder.customer?.currency ?? 'IDR')}</span>
+                        <span>Remaining: {formatCurrency(parseFloat(contextOrder.remaining_balance), contextOrder.customer?.currency ?? 'IDR')}</span>
+                    </div>
+                </div>
+            )}
+
             <form className="space-y-8" onSubmit={handleSubmit}>
                 <div className="bg-card rounded-lg border border-border p-6 space-y-6">
                     <h2 className="text-lg font-semibold text-foreground">Invoice Details</h2>
@@ -197,7 +229,8 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                 name="customer_id"
                                 value={formData.customer_id}
                                 onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                disabled={!!contextOrder}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <option value={0}>Select a customer</option>
                                 {customers?.map((customer) => (
@@ -222,7 +255,8 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                     }))
                                 }
                                 required
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                disabled={!!contextOrder}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <option value="">Select type...</option>
                                 {invoiceTypes.map((t) => (

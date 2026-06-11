@@ -7,3 +7,4 @@ export * from './useLineItems';
 export * from './useCurrencyRates';
 export * from './useInvoiceTypes';
 export * from './useInvoiceSettings';
+export * from './useOrders';

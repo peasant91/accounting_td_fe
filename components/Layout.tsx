@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/customers', label: 'Customers', icon: Users },
+    { href: '/orders', label: 'Orders', icon: ClipboardList, hideSales: true },
     { href: '/invoices', label: 'Invoices', icon: FileText },
 ];
 
@@ -51,8 +52,9 @@ export function Layout({ children }: { children: ReactNode }) {
                 </div>
                 <nav className="flex-1 p-4 flex flex-col gap-1">
                     {navItems.map((item) => {
+                        if ('hideSales' in item && item.hideSales && user?.role === 'sales') return null;
                         const Icon = item.icon;
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.href}

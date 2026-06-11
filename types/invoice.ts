@@ -113,6 +113,7 @@ export interface InvoiceFormData {
     use_unique_code?: boolean;
     items: InvoiceItemFormData[];
     send_immediately?: boolean;
+    order_id?: number | null;
 }
 
 export interface InvoiceListParams {

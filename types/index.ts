@@ -4,3 +4,4 @@ export * from './invoice-type';
 export * from './invoice-setting';
 export * from './api';
 export * from './item-template';
+export * from './order';
