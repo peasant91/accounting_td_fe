@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
-import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems } from '@/lib/hooks';
+import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useInvoiceSettings } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
@@ -24,8 +24,13 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
 
     const isEditMode = !!invoiceId;
 
+    const { data: invoiceTypesData } = useInvoiceTypes();
+    const invoiceTypes = invoiceTypesData?.data ?? [];
+    const { data: settingsData } = useInvoiceSettings();
+
     const [formData, setFormData] = useState<InvoiceFormState>({
         customer_id: 0,
+        invoice_type_id: null,
         invoice_date: getTodayString(),
         due_date: '',
         tax_rate: 0,
@@ -53,6 +58,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         const invoice = existingInvoiceData.data;
         setFormData({
             customer_id: invoice.customer_id,
+            invoice_type_id: invoice.invoice_type_id ?? null,
             invoice_date: invoice.invoice_date.split('T')[0],
             due_date: invoice.due_date ? invoice.due_date.split('T')[0] : '',
             tax_rate: Number(invoice.tax_rate),
@@ -80,6 +86,13 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setCurrency(customer.currency || 'IDR');
         }
     }, [isEditMode, autoSelectCustomerId, formData.customer_id, customers]);
+
+    useEffect(() => {
+        if (!isEditMode && settingsData?.data?.default_note && !formData.notes) {
+            setFormData((prev) => ({ ...prev, notes: settingsData.data!.default_note! }));
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [settingsData, isEditMode]);
 
     useEffect(() => {
         itemTemplatesApi.list().then((res) => {
@@ -194,6 +207,31 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                 ))}
                             </select>
                             {errors.customer_id && <p className="text-sm text-destructive">{errors.customer_id}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="invoice_type_id">Invoice Type *</Label>
+                            <select
+                                id="invoice_type_id"
+                                name="invoice_type_id"
+                                value={formData.invoice_type_id ?? ''}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        invoice_type_id: e.target.value ? parseInt(e.target.value) : null,
+                                    }))
+                                }
+                                required
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <option value="">Select type...</option>
+                                {invoiceTypes.map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.code} — {t.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.invoice_type_id && <p className="text-sm text-destructive">{errors.invoice_type_id}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

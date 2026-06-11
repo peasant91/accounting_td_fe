@@ -201,7 +201,7 @@ export default function CustomerDetailPage() {
                                         </td>
                                         <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.invoice_date)}</td>
                                         <td className="px-4 py-3 text-sm text-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-right font-medium text-foreground">
+                                        <td className={`px-4 py-3 text-sm text-right font-medium ${invoice.use_unique_code ? 'text-indigo-600' : 'text-foreground'}`}>
                                             {formatCurrency(invoice.total, invoice.currency)}
                                         </td>
                                         <td className="px-4 py-3 text-center">

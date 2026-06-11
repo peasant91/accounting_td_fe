@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useInvoices, useDeleteInvoice, useDebounce, useCustomers } from '@/lib/hooks';
+import { useInvoices, useDeleteInvoice, useDebounce, useCustomers, useInvoiceTypes } from '@/lib/hooks';
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
-import { InvoiceListItem, InvoiceStatus, InvoiceBillingType } from '@/types';
+import { InvoiceListItem, InvoiceStatus } from '@/types';
 import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
 export function InvoiceList() {
@@ -15,17 +15,20 @@ export function InvoiceList() {
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 300);
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
-    const [typeFilter, setTypeFilter] = useState<InvoiceBillingType | ''>('');
+    const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<number | undefined>(undefined);
     const [customerFilter, setCustomerFilter] = useState<number | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
 
     const { data: customersData } = useCustomers({ per_page: 200 });
     const customers = customersData?.data ?? [];
 
+    const { data: invoiceTypesData } = useInvoiceTypes();
+    const invoiceTypes = invoiceTypesData?.data ?? [];
+
     const { data, isLoading, error } = useInvoices({
         search: debouncedSearch,
         status: statusFilter || undefined,
-        billing_type: typeFilter || undefined,
+        invoice_type_id: invoiceTypeFilter,
         customer_id: customerFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
@@ -99,13 +102,16 @@ export function InvoiceList() {
                     <option value="cancelled">Cancelled</option>
                 </select>
                 <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as InvoiceBillingType | '')}
+                    value={invoiceTypeFilter?.toString() ?? ''}
+                    onChange={(e) => setInvoiceTypeFilter(e.target.value ? parseInt(e.target.value) : undefined)}
                     className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <option value="">All Types</option>
-                    <option value="manual">Manual</option>
-                    <option value="recurring">Recurring</option>
+                    {invoiceTypes.map((t) => (
+                        <option key={t.id} value={t.id}>
+                            {t.code} — {t.name}
+                        </option>
+                    ))}
                 </select>
             </div>
 
