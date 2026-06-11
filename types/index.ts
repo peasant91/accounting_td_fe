@@ -5,3 +5,4 @@ export * from './invoice-setting';
 export * from './api';
 export * from './item-template';
 export * from './order';
+export * from './import';

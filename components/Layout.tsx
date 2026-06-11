@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, FileText, Menu, X, Settings, ClipboardList, Shield, LogOut, DollarSign, Tag, ChevronRight, Settings2 } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, X, Settings, ClipboardList, Shield, LogOut, DollarSign, Tag, ChevronRight, Settings2, Upload } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 const navItems = [
@@ -130,19 +130,34 @@ export function Layout({ children }: { children: ReactNode }) {
                         </>
                     )}
                     {user?.role === 'super_admin' && (
-                        <Link
-                            href="/admins"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                                "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                                pathname === '/admins'
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                        >
-                            <Shield className="h-5 w-5" />
-                            <span>Admins</span>
-                        </Link>
+                        <>
+                            <Link
+                                href="/import"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                                    pathname === '/import'
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                )}
+                            >
+                                <Upload className="h-5 w-5" />
+                                <span>Import</span>
+                            </Link>
+                            <Link
+                                href="/admins"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                                    pathname === '/admins'
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                )}
+                            >
+                                <Shield className="h-5 w-5" />
+                                <span>Admins</span>
+                            </Link>
+                        </>
                     )}
                 </nav>
                 {user && (
