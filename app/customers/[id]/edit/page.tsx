@@ -58,6 +58,8 @@ export default function EditCustomerPage() {
         country: customer.country || '',
         tax_id: customer.tax_id || '',
         notes: customer.notes || '',
+        maintenance_fee: customer.maintenance_fee ?? null,
+        maintenance_type: customer.maintenance_type ?? null,
     };
 
     return (

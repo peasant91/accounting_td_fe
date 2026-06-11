@@ -18,6 +18,8 @@ export interface Customer {
     tax_id: string | null;
     notes: string | null;
     status: CustomerStatus;
+    maintenance_fee: string | null;
+    maintenance_type: 'monthly' | 'yearly' | null;
     total_receivable: number;
     invoices?: Invoice[];
     created_at: string;
@@ -51,6 +53,8 @@ export interface CustomerFormData {
     country?: string;
     tax_id?: string;
     notes?: string;
+    maintenance_fee?: string | null;
+    maintenance_type?: 'monthly' | 'yearly' | null;
 }
 
 export interface CustomerListParams {

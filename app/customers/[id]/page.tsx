@@ -143,6 +143,23 @@ export default function CustomerDetailPage() {
                                 {formatCurrency(customer.total_receivable, customer.currency)}
                             </span>
                         </div>
+                        {(customer.maintenance_fee || customer.maintenance_type) && (
+                            <div className="space-y-1">
+                                <span className="text-sm font-medium text-muted-foreground">Maintenance</span>
+                                <div className="flex items-center gap-2">
+                                    {customer.maintenance_fee && (
+                                        <span className="block font-medium text-foreground">
+                                            {formatCurrency(parseFloat(customer.maintenance_fee), customer.currency)}
+                                        </span>
+                                    )}
+                                    {customer.maintenance_type && (
+                                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
+                                            {customer.maintenance_type}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

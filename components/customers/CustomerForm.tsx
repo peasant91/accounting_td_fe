@@ -27,6 +27,8 @@ const initialFormData: CustomerFormData = {
     country: '',
     tax_id: '',
     notes: '',
+    maintenance_fee: null,
+    maintenance_type: null,
 };
 
 export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submitLabel = 'Save' }: CustomerFormProps) {
@@ -176,6 +178,49 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     value={formData.notes || ''}
                     onChange={handleChange}
                 />
+                <div className="grid grid-cols-2 gap-4">
+                    <Input
+                        label="Maintenance Fee"
+                        name="maintenance_fee"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.maintenance_fee ?? ''}
+                        onChange={handleChange}
+                        error={errors.maintenance_fee}
+                    />
+                    <div className="space-y-2">
+                        <Label>Maintenance Type{formData.maintenance_fee ? ' *' : ''}</Label>
+                        <Select
+                            value={formData.maintenance_type ?? ''}
+                            onValueChange={(value: string) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    maintenance_type: (value || null) as 'monthly' | 'yearly' | null,
+                                }));
+                                if (errors.maintenance_type) {
+                                    setErrors(prev => {
+                                        const updated = { ...prev };
+                                        delete updated.maintenance_type;
+                                        return updated;
+                                    });
+                                }
+                            }}
+                        >
+                            <SelectTrigger className={errors.maintenance_type ? 'border-destructive' : ''}>
+                                <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="yearly">Yearly</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {errors.maintenance_type && (
+                            <p className="text-sm text-destructive">{errors.maintenance_type}</p>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="flex justify-end gap-3">
