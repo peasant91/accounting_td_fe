@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, FileText, Menu, X, Settings, ClipboardList, Shield, LogOut, DollarSign, Tag, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, X, Settings, ClipboardList, Shield, LogOut, DollarSign, Tag, ChevronRight, Settings2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 const navItems = [
@@ -16,6 +16,8 @@ const navItems = [
 const settingsItems = [
     { href: '/settings/exchange-rates', label: 'Exchange Rates', icon: DollarSign },
     { href: '/settings/item-templates', label: 'Item Templates', icon: Tag },
+    { href: '/settings/invoice-types', label: 'Invoice Types', icon: Tag },
+    { href: '/settings/invoice', label: 'Invoice Settings', icon: Settings2 },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
