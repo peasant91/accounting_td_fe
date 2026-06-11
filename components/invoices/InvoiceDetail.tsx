@@ -172,8 +172,8 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             <div className="space-y-2">
                                 <h3 className="text-sm font-medium text-muted-foreground">Type</h3>
                                 <div className="flex items-center gap-2">
-                                    {invoice.type && <TypeBadge type={invoice.type} />}
-                                    {invoice.type === 'recurring' && invoice.recurring_invoice_id && invoice.customer_id && (
+                                    {invoice.billing_type && <TypeBadge type={invoice.billing_type} />}
+                                    {invoice.billing_type === 'recurring' && invoice.recurring_invoice_id && invoice.customer_id && (
                                         <Link href={`/customers/${invoice.customer_id}/recurring/${invoice.recurring_invoice_id}/edit`} className="text-xs text-primary hover:underline">
                                             View Template
                                         </Link>

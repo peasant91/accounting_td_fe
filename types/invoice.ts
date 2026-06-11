@@ -1,10 +1,11 @@
 // Invoice types
 
 import { Customer } from './customer';
+import { InvoiceTypeRef } from './invoice-type';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-export type InvoiceType = 'manual' | 'recurring';
+export type InvoiceBillingType = 'manual' | 'recurring';
 export type RecurrenceType = 'monthly' | 'weekly' | 'bi-weekly' | 'tri-weekly' | 'manual' | 'counted';
 export type RecurrenceUnit = 'day' | 'week' | 'month' | 'year';
 
@@ -57,7 +58,9 @@ export interface Invoice {
     use_unique_code: boolean;
     unique_code: number;
     status: InvoiceStatus;
-    type: InvoiceType;
+    billing_type: InvoiceBillingType;
+    invoice_type_id: number | null;
+    invoice_type: InvoiceTypeRef | null;
     recurring_invoice_id: number | null;
     notes: string | null;
     internal_notes: string | null;
@@ -85,7 +88,9 @@ export interface InvoiceListItem {
     use_unique_code: boolean;
     unique_code: number | null;
     status: InvoiceStatus;
-    type: InvoiceType;
+    billing_type: InvoiceBillingType;
+    invoice_type_id: number | null;
+    invoice_type: InvoiceTypeRef | null;
     currency: string;
 }
 
@@ -99,6 +104,7 @@ export interface InvoiceItemFormData {
 
 export interface InvoiceFormData {
     customer_id: number;
+    invoice_type_id?: number | null;
     invoice_date: string;
     due_date: string | null;
     tax_rate: number;
@@ -114,7 +120,8 @@ export interface InvoiceListParams {
     per_page?: number;
     search?: string;
     status?: InvoiceStatus;
-    type?: InvoiceType;
+    billing_type?: InvoiceBillingType;
+    invoice_type_id?: number;
     customer_id?: number;
     date_from?: string;
     date_to?: string;

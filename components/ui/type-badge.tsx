@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
-import { InvoiceType } from '@/types';
+import { InvoiceBillingType } from '@/types';
 import { RefreshCw, FileText } from 'lucide-react';
 
 interface TypeBadgeProps {
-    type: InvoiceType;
+    type: InvoiceBillingType;
     className?: string;
 }
 

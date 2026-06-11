@@ -7,3 +7,5 @@ export * as auth from './auth';
 export * as admins from './admins';
 export * as audit from './audit';
 export * as itemTemplatesApi from './item-templates';
+export * as invoiceTypesApi from './invoice-types';
+export * as invoiceSettingsApi from './invoice-settings';

@@ -7,7 +7,7 @@ import { useInvoices, useDeleteInvoice, useDebounce, useCustomers } from '@/lib/
 import { Button, EmptyState, ErrorState, LoadingState, StatusBadge, TypeBadge, ConfirmDialog } from '@/components/ui';
 import { formatCurrency, formatDate, getTotalDue } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
-import { InvoiceListItem, InvoiceStatus, InvoiceType } from '@/types';
+import { InvoiceListItem, InvoiceStatus, InvoiceBillingType } from '@/types';
 import { FileText, Plus, Eye, Trash2 } from 'lucide-react';
 
 export function InvoiceList() {
@@ -15,7 +15,7 @@ export function InvoiceList() {
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 300);
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
-    const [typeFilter, setTypeFilter] = useState<InvoiceType | ''>('');
+    const [typeFilter, setTypeFilter] = useState<InvoiceBillingType | ''>('');
     const [customerFilter, setCustomerFilter] = useState<number | ''>('');
     const [deletingInvoice, setDeletingInvoice] = useState<InvoiceListItem | null>(null);
 
@@ -25,7 +25,7 @@ export function InvoiceList() {
     const { data, isLoading, error } = useInvoices({
         search: debouncedSearch,
         status: statusFilter || undefined,
-        type: typeFilter || undefined,
+        billing_type: typeFilter || undefined,
         customer_id: customerFilter || undefined,
     });
     const deleteInvoice = useDeleteInvoice();
@@ -100,7 +100,7 @@ export function InvoiceList() {
                 </select>
                 <select
                     value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as InvoiceType | '')}
+                    onChange={(e) => setTypeFilter(e.target.value as InvoiceBillingType | '')}
                     className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     <option value="">All Types</option>
@@ -146,7 +146,7 @@ export function InvoiceList() {
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(invoice.invoice_date)}</td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <TypeBadge type={invoice.type} />
+                                        <TypeBadge type={invoice.billing_type} />
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
                                         <span className={invoice.use_unique_code ? 'text-indigo-600' : ''}>
