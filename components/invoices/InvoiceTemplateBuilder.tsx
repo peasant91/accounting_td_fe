@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, Eye } from 'lucide-react';
+import { Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { useAuth } from '@/lib/auth';
@@ -31,21 +31,15 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
     }, [data]);
 
     const handleToggle = (key: InvoiceComponentKey, checked: boolean) => {
-        setComponents((prev) =>
-            prev.map((comp) => (comp.key === key ? { ...comp, enabled: checked } : comp))
-        );
-    };
-
-    const handleSave = () => {
-        const payload = components.map(({ key, enabled }) => ({ key, enabled }));
+        const updated = components.map((comp) => (comp.key === key ? { ...comp, enabled: checked } : comp));
+        setComponents(updated);
+        const payload = updated.map(({ key: k, enabled }) => ({ key: k, enabled }));
         updateMutation.mutate(
             { customerId, data: { components: payload } },
             {
-                onSuccess: () => {
-                    toast.success('Invoice template saved successfully');
-                },
                 onError: () => {
-                    toast.error('Failed to save invoice template');
+                    toast.error('Failed to save');
+                    setComponents((prev) => prev.map((comp) => (comp.key === key ? { ...comp, enabled: !checked } : comp)));
                 },
             }
         );
@@ -68,18 +62,12 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
                         Customize the invoice layout for this customer.
                     </CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                    {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                     <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(true)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Preview
                     </Button>
-                    {!isSales && (
-                        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
-                            {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            <Save className="mr-2 h-4 w-4" />
-                            Save Changes
-                        </Button>
-                    )}
                 </div>
             </CardHeader>
             <CardContent>

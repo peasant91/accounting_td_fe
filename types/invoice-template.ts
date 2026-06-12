@@ -9,7 +9,8 @@ export type InvoiceComponentKey =
     | 'bank_transfer'
     | 'transfer_fee_note'
     | 'invoice_digits_note'
-    | 'unique_number';
+    | 'unique_number'
+    | 'external_notes';
 
 export interface InvoiceComponentConfig {
     key: InvoiceComponentKey;

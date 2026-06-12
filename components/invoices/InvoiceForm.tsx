@@ -408,7 +408,15 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                         name="external_notes"
                         value={formData.external_notes || ''}
                         onChange={handleChange}
-                        placeholder="Add any notes for the customer..."
+                        placeholder="Visible to the customer. Printed on the invoice PDF."
+                    />
+                    <Textarea
+                        label="Internal Notes"
+                        id="internal_notes"
+                        name="internal_notes"
+                        value={formData.internal_notes || ''}
+                        onChange={handleChange}
+                        placeholder="Internal only. Never printed or sent to the customer."
                     />
                 </div>
 
