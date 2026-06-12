@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
-import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useInvoiceSettings, useOrder } from '@/lib/hooks';
+import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useOrder } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
@@ -26,8 +26,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
 
     const { data: invoiceTypesData } = useInvoiceTypes();
     const invoiceTypes = invoiceTypesData?.data ?? [];
-    const { data: settingsData } = useInvoiceSettings();
-
     const [formData, setFormData] = useState<InvoiceFormState>({
         customer_id: 0,
         invoice_type_id: null,
@@ -107,13 +105,6 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             setCurrency(contextOrder.customer.currency);
         }
     }, [isEditMode, contextOrder, formData.order_id]);
-
-    useEffect(() => {
-        if (!isEditMode && settingsData?.data?.default_note && !formData.external_notes) {
-            setFormData((prev) => ({ ...prev, external_notes: settingsData.data!.default_note! }));
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [settingsData, isEditMode]);
 
     useEffect(() => {
         itemTemplatesApi.list().then((res) => {
