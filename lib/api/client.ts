@@ -3,7 +3,7 @@ import { ensureCsrf, xsrfHeader, resetCsrf } from './csrf';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface RequestOptions {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     body?: unknown;
     headers?: Record<string, string>;
 }
@@ -58,6 +58,7 @@ class ApiClient {
     get<T>(endpoint: string) { return this.request<T>(endpoint, { method: 'GET' }); }
     post<T>(endpoint: string, body?: unknown) { return this.request<T>(endpoint, { method: 'POST', body }); }
     put<T>(endpoint: string, body?: unknown) { return this.request<T>(endpoint, { method: 'PUT', body }); }
+    patch<T>(endpoint: string, body?: unknown) { return this.request<T>(endpoint, { method: 'PATCH', body }); }
     delete<T>(endpoint: string) { return this.request<T>(endpoint, { method: 'DELETE' }); }
 
     async download(endpoint: string, filename: string) {

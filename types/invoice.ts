@@ -2,6 +2,7 @@
 
 import { Customer } from './customer';
 import { InvoiceTypeRef } from './invoice-type';
+import { InvoiceComponentConfig, StampPosition } from './invoice-template';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'credit_card' | 'other';
@@ -64,6 +65,8 @@ export interface Invoice {
     recurring_invoice_id: number | null;
     external_notes: string | null;
     internal_notes: string | null;
+    components: InvoiceComponentConfig[] | null;
+    stamp_position: StampPosition | null;
     cancellation_reason: string | null;
     payment_date: string | null;
     payment_method: PaymentMethod | null;
@@ -146,4 +149,9 @@ export interface MarkAsPaidData {
 
 export interface CancelInvoiceData {
     cancellation_reason: string;
+}
+
+export interface InvoiceTemplateUpdateData {
+    components?: Array<{ key: string; enabled: boolean }>;
+    stamp_position?: StampPosition | null;
 }

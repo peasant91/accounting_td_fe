@@ -8,6 +8,7 @@ import {
     SendInvoiceData,
     MarkAsPaidData,
     CancelInvoiceData,
+    InvoiceTemplateUpdateData,
 } from '@/types';
 
 export function useInvoices(params: InvoiceListParams = {}) {
@@ -101,6 +102,27 @@ export function useCancelInvoice() {
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['orders'] });
+        },
+    });
+}
+
+export function useUpdateInvoiceTemplate() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: number; data: InvoiceTemplateUpdateData }) =>
+            invoicesApi.updateTemplate(id, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['invoices', variables.id] });
+        },
+    });
+}
+
+export function useResetInvoiceTemplate() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: number) => invoicesApi.resetTemplate(id),
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: ['invoices', id] });
         },
     });
 }

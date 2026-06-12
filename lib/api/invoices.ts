@@ -9,6 +9,7 @@ import {
     SendInvoiceData,
     MarkAsPaidData,
     CancelInvoiceData,
+    InvoiceTemplateUpdateData,
     PaginatedResponse,
     SingleResponse,
 } from '@/types';
@@ -77,4 +78,12 @@ export async function cancel(id: number, data: CancelInvoiceData): Promise<Singl
 
 export function downloadPdf(id: number, invoiceNumber: string): Promise<void> {
     return apiClient.download(`/invoices/${id}/pdf`, `${invoiceNumber}.pdf`);
+}
+
+export async function updateTemplate(id: number, data: InvoiceTemplateUpdateData): Promise<SingleResponse<Invoice>> {
+    return apiClient.patch<SingleResponse<Invoice>>(`/invoices/${id}/template`, data);
+}
+
+export async function resetTemplate(id: number): Promise<SingleResponse<Invoice>> {
+    return apiClient.post<SingleResponse<Invoice>>(`/invoices/${id}/reset-template`, {});
 }
