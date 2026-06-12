@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@/components/ui';
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, PriceInput } from '@/components/ui';
 import { Label } from '@/components/ui/label';
 import { validateEmail, validateRequired } from '@/lib/utils';
 import { CustomerFormData } from '@/types';
@@ -179,24 +179,22 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                     onChange={handleChange}
                 />
                 <div className="grid grid-cols-2 gap-4">
-                    <Input
-                        label="Maintenance Fee"
-                        name="maintenance_fee"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.maintenance_fee ?? ''}
-                        onChange={handleChange}
-                        error={errors.maintenance_fee}
-                    />
+                    <div className="space-y-2">
+                        <Label>Maintenance Fee</Label>
+                        <PriceInput
+                            value={formData.maintenance_fee ?? ''}
+                            onChange={(raw) => setFormData(prev => ({ ...prev, maintenance_fee: raw ? raw : null }))}
+                        />
+                        {errors.maintenance_fee && <p className="text-sm text-destructive">{errors.maintenance_fee}</p>}
+                    </div>
                     <div className="space-y-2">
                         <Label>Maintenance Type{formData.maintenance_fee ? ' *' : ''}</Label>
                         <Select
-                            value={formData.maintenance_type ?? ''}
+                            value={formData.maintenance_type ?? 'none'}
                             onValueChange={(value: string) => {
                                 setFormData(prev => ({
                                     ...prev,
-                                    maintenance_type: (value || null) as 'monthly' | 'yearly' | null,
+                                    maintenance_type: (value === 'none' ? null : value) as 'monthly' | 'yearly' | null,
                                 }));
                                 if (errors.maintenance_type) {
                                     setErrors(prev => {
@@ -211,7 +209,7 @@ export function CustomerForm({ initialData, onSubmit, isLoading, onCancel, submi
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                                 <SelectItem value="monthly">Monthly</SelectItem>
                                 <SelectItem value="yearly">Yearly</SelectItem>
                             </SelectContent>

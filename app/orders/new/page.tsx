@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input, Label, Textarea } from '@/components/ui';
+import { Button, Input, Label, Textarea, PriceInput } from '@/components/ui';
 import { useCustomers, useCreateOrder, useInvoiceTypes } from '@/lib/hooks';
 import { useAuth } from '@/lib/auth';
 import { OrderFormData } from '@/types/order';
@@ -47,7 +47,7 @@ function NewOrderForm() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        const numericFields = ['customer_id', 'invoice_type_id', 'total_price', 'deposit_amount', 'maintenance_price'];
+        const numericFields = ['customer_id', 'invoice_type_id'];
         setFormData((prev) => ({
             ...prev,
             [name]: numericFields.includes(name) ? (value === '' ? null : Number(value)) : (value === '' ? null : value),
@@ -143,37 +143,31 @@ function NewOrderForm() {
                     />
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Input
-                            label="Total Price *"
-                            id="total_price"
-                            name="total_price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={formData.total_price ?? ''}
-                            onChange={handleChange}
-                            error={errors.total_price}
-                        />
-                        <Input
-                            label="Deposit Amount"
-                            id="deposit_amount"
-                            name="deposit_amount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={formData.deposit_amount ?? ''}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="Maintenance Price"
-                            id="maintenance_price"
-                            name="maintenance_price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={formData.maintenance_price ?? ''}
-                            onChange={handleChange}
-                        />
+                        <div className="space-y-2">
+                            <Label htmlFor="total_price">Total Price *</Label>
+                            <PriceInput
+                                id="total_price"
+                                value={formData.total_price}
+                                onChange={(raw) => setFormData(prev => ({ ...prev, total_price: raw ? Number(raw) : undefined }))}
+                            />
+                            {errors.total_price && <p className="text-sm text-destructive">{errors.total_price}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="deposit_amount">Deposit Amount</Label>
+                            <PriceInput
+                                id="deposit_amount"
+                                value={formData.deposit_amount}
+                                onChange={(raw) => setFormData(prev => ({ ...prev, deposit_amount: raw ? Number(raw) : null }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="maintenance_price">Maintenance Price</Label>
+                            <PriceInput
+                                id="maintenance_price"
+                                value={formData.maintenance_price}
+                                onChange={(raw) => setFormData(prev => ({ ...prev, maintenance_price: raw ? Number(raw) : null }))}
+                            />
+                        </div>
                     </div>
 
                     <Input
