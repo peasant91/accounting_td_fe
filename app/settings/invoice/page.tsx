@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useInvoiceSettings, useUpdateInvoiceSettings, useUploadStamp, useDeleteStamp } from '@/lib/hooks/useInvoiceSettings';
 import { Button } from '@/components/ui';
 import { Upload, Trash2, FileText } from 'lucide-react';
@@ -24,11 +24,24 @@ export default function InvoiceSettingsPage() {
     const deleteStamp = useDeleteStamp();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const noteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [toggleSaved, setToggleSaved] = useState(false);
 
     const setting = data?.data;
 
     function handlePositionSelect(position: StampPosition) {
         updateSettings.mutate({ stamp_position: position });
+    }
+
+    function handlePrintExternalNotesToggle(checked: boolean) {
+        updateSettings.mutate(
+            { print_external_notes: checked },
+            {
+                onSuccess: () => {
+                    setToggleSaved(true);
+                    setTimeout(() => setToggleSaved(false), 1500);
+                },
+            }
+        );
     }
 
     function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -51,7 +64,7 @@ export default function InvoiceSettingsPage() {
     if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
     return (
-        <div className="space-y-8 max-w-2xl">
+        <div className="space-y-8">
             <div>
                 <h1 className="text-2xl font-bold">Invoice Settings</h1>
                 <p className="text-muted-foreground text-sm mt-1">Configure stamp and default note for all invoices.</p>
@@ -134,6 +147,27 @@ export default function InvoiceSettingsPage() {
             <div className="border rounded-lg p-6 space-y-4">
                 <h2 className="font-semibold text-lg">Default Invoice Note</h2>
                 <p className="text-sm text-muted-foreground">Pre-filled in the Note field for every new invoice. Editable per invoice.</p>
+                <div className="flex items-center justify-between py-2 border-b border-border mb-4">
+                    <div>
+                        <p className="text-sm font-medium">Print external notes on PDF</p>
+                        <p className="text-xs text-muted-foreground">When enabled, external notes appear on printed invoices.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {toggleSaved && <span className="text-xs text-green-600">Saved</span>}
+                        <button
+                            role="switch"
+                            aria-checked={setting?.print_external_notes ?? true}
+                            onClick={() => handlePrintExternalNotesToggle(!(setting?.print_external_notes ?? true))}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                (setting?.print_external_notes ?? true) ? 'bg-primary' : 'bg-muted-foreground/30'
+                            }`}
+                        >
+                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                                (setting?.print_external_notes ?? true) ? 'translate-x-5' : 'translate-x-1'
+                            }`} />
+                        </button>
+                    </div>
+                </div>
                 <textarea
                     defaultValue={setting?.default_note ?? ''}
                     onChange={handleNoteChange}
