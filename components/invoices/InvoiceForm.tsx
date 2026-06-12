@@ -403,7 +403,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                 <div className="bg-card rounded-lg border border-border p-6 space-y-4">
                     <h2 className="text-lg font-semibold text-foreground">Notes</h2>
                     <Textarea
-                        label="Internal Notes"
+                        label="External Notes"
                         id="external_notes"
                         name="external_notes"
                         value={formData.external_notes || ''}
