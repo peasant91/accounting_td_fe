@@ -9,7 +9,7 @@ import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBui
 import { RecurringInvoiceList } from '@/components/recurring/RecurringInvoiceList';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/types/order';
-import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye, ClipboardList } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, Phone, MapPin, CreditCard, FileText, Plus, Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 export default function CustomerDetailPage() {
@@ -19,6 +19,7 @@ export default function CustomerDetailPage() {
 
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'invoices' | 'orders'>('invoices');
 
     const { data, isLoading, error, isRefetching } = useCustomer(id);
     const deleteCustomer = useDeleteCustomer();
@@ -176,144 +177,164 @@ export default function CustomerDetailPage() {
             </section>
 
             <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-foreground">Invoices</h2>
-                    {!isSales && (
-                        <Link href={`/invoices/new?customer_id=${customer.id}`}>
-                            <Button size="sm" variant="outline">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Invoice
-                            </Button>
-                        </Link>
-                    )}
+                <div className="flex gap-1 border-b border-border">
+                    <button
+                        onClick={() => setActiveTab('invoices')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                            activeTab === 'invoices'
+                                ? 'border-primary text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        Invoices
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('orders')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                            activeTab === 'orders'
+                                ? 'border-primary text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        Orders
+                        {customerOrders.length > 0 && (
+                            <span className="ml-1.5 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium">
+                                {customerOrders.length}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
-                {!customer.invoices || customer.invoices.length === 0 ? (
-                    <EmptyState
-                        icon={FileText}
-                        title="No invoices yet"
-                        description="This customer has no invoices."
-                        action={!isSales ? {
-                            label: "Create Invoice",
-                            onClick: () => router.push(`/invoices/new?customer_id=${customer.id}`)
-                        } : undefined}
-                    />
-                ) : (
-                    <div className="bg-card rounded-lg border border-border overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice #</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Due Date</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {customer.invoices.map((invoice) => (
-                                    <tr key={invoice.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3">
-                                            <Link href={`/invoices/${invoice.id}`} className="text-sm font-medium text-primary hover:underline">
-                                                {invoice.invoice_number}
-                                            </Link>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.invoice_date)}</td>
-                                        <td className="px-4 py-3 text-sm text-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
-                                        <td className={`px-4 py-3 text-sm text-right font-medium ${invoice.use_unique_code ? 'text-indigo-600' : 'text-foreground'}`}>
-                                            {formatCurrency(invoice.total, invoice.currency)}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <StatusBadge status={invoice.status} />
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <Link href={`/invoices/${invoice.id}`}>
-                                                <Button size="icon" variant="ghost">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                {activeTab === 'invoices' && (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            {!isSales && (
+                                <Link href={`/invoices/new?customer_id=${customer.id}`}>
+                                    <Button size="sm" variant="outline">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Invoice
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
+
+                        {!customer.invoices || customer.invoices.length === 0 ? (
+                            <EmptyState
+                                icon={FileText}
+                                title="No invoices yet"
+                                description="This customer has no invoices."
+                                action={!isSales ? {
+                                    label: "Create Invoice",
+                                    onClick: () => router.push(`/invoices/new?customer_id=${customer.id}`)
+                                } : undefined}
+                            />
+                        ) : (
+                            <div className="bg-card rounded-lg border border-border overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-muted/50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice #</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Due Date</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
+                                            <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {customer.invoices.map((invoice) => (
+                                            <tr key={invoice.id} className="hover:bg-muted/30 transition-colors">
+                                                <td className="px-4 py-3">
+                                                    <Link href={`/invoices/${invoice.id}`} className="text-sm font-medium text-primary hover:underline">
+                                                        {invoice.invoice_number}
+                                                    </Link>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-foreground">{formatDate(invoice.invoice_date)}</td>
+                                                <td className="px-4 py-3 text-sm text-foreground">{invoice.due_date ? formatDate(invoice.due_date) : '-'}</td>
+                                                <td className={`px-4 py-3 text-sm text-right font-medium ${invoice.use_unique_code ? 'text-indigo-600' : 'text-foreground'}`}>
+                                                    {formatCurrency(invoice.total, invoice.currency)}
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <StatusBadge status={invoice.status} />
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <Link href={`/invoices/${invoice.id}`}>
+                                                        <Button size="icon" variant="ghost">
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 )}
-            </section>
 
-
-
-            {/* Orders Section */}
-            <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-foreground">Orders</h2>
-                    {!isSales && (
-                        <Link href={`/orders/new?customer_id=${customer.id}`}>
-                            <Button size="sm" variant="outline">
-                                <Plus className="h-4 w-4 mr-2" />
-                                New Order
-                            </Button>
-                        </Link>
-                    )}
-                </div>
-
-                {customerOrders.length === 0 ? (
-                    <EmptyState
-                        icon={ClipboardList}
-                        title="No orders yet"
-                        description="This customer has no orders."
-                        action={!isSales ? {
-                            label: "New Order",
-                            onClick: () => router.push(`/orders/new?customer_id=${customer.id}`)
-                        } : undefined}
-                    />
-                ) : (
-                    <div className="bg-card rounded-lg border border-border overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Title</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Total</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Paid</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Remaining</th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {customerOrders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3">
-                                            <Link href={`/orders/${order.id}`} className="text-sm font-medium text-primary hover:underline">
-                                                {order.title}
-                                            </Link>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-right font-medium">
-                                            {formatCurrency(parseFloat(order.total_price), customer.currency ?? 'IDR')}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-right text-green-700">
-                                            {formatCurrency(parseFloat(order.total_paid), customer.currency ?? 'IDR')}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-right text-orange-600">
-                                            {formatCurrency(parseFloat(order.remaining_balance), customer.currency ?? 'IDR')}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
-                                                {ORDER_STATUS_LABELS[order.status]}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <Link href={`/orders/${order.id}`}>
-                                                <Button size="icon" variant="ghost">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                {activeTab === 'orders' && (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            {!isSales && (
+                                <Button size="sm" onClick={() => router.push(`/orders/new?customer_id=${customer.id}`)}>
+                                    <Plus className="h-4 w-4 mr-1" /> New Order
+                                </Button>
+                            )}
+                        </div>
+                        {customerOrders.length === 0 ? (
+                            <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">
+                                No orders yet.
+                            </div>
+                        ) : (
+                            <div className="rounded-lg border border-border overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-muted/50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Title</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Type</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Total</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Paid</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Remaining</th>
+                                            <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {customerOrders.map((order) => {
+                                            const remaining = parseFloat(order.remaining_balance);
+                                            return (
+                                                <tr
+                                                    key={order.id}
+                                                    className="hover:bg-muted/30 transition-colors cursor-pointer"
+                                                    onClick={() => router.push(`/orders/${order.id}`)}
+                                                >
+                                                    <td className="px-4 py-3 text-sm font-medium text-foreground">{order.title}</td>
+                                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                                        {order.invoice_type?.code ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-right">
+                                                        {formatCurrency(parseFloat(order.total_price), customer.currency ?? 'IDR')}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-right text-green-700">
+                                                        {formatCurrency(parseFloat(order.total_paid), customer.currency ?? 'IDR')}
+                                                    </td>
+                                                    <td className={`px-4 py-3 text-sm text-right font-medium ${remaining < 0 ? 'text-amber-600' : 'text-orange-600'}`}>
+                                                        {remaining < 0
+                                                            ? `Overpaid: ${formatCurrency(Math.abs(remaining), customer.currency ?? 'IDR')}`
+                                                            : formatCurrency(remaining, customer.currency ?? 'IDR')}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
+                                                            {ORDER_STATUS_LABELS[order.status]}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 )}
             </section>
