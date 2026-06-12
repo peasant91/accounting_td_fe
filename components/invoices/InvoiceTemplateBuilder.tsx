@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useInvoiceTemplate, useUpdateInvoiceTemplate } from '@/lib/hooks/useInvoiceTemplates';
+import { useInvoiceTemplate, useUpdateInvoiceTemplate as useUpdateCustomerTemplate } from '@/lib/hooks/useInvoiceTemplates';
+import { useInvoice, useUpdateInvoiceTemplate, useResetInvoiceTemplate } from '@/lib/hooks/useInvoices';
 import { InvoiceComponentConfig, InvoiceComponentKey, StampPosition } from '@/types/invoice-template';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +12,17 @@ import { Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { useAuth } from '@/lib/auth';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const STAMP_ZONES: { position: StampPosition; label: string; col: number; row: number }[] = [
     { position: 'top_left',     label: 'Top Left',   col: 1, row: 1 },
@@ -24,54 +36,100 @@ const STAMP_ZONES: { position: StampPosition; label: string; col: number; row: n
 
 interface InvoiceTemplateBuilderProps {
     customerId: number;
+    invoiceId?: number;  // when present: invoice-scoped mode
 }
 
-export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderProps) {
-    const { data, isLoading, error } = useInvoiceTemplate(customerId);
-    const updateMutation = useUpdateInvoiceTemplate();
+export function InvoiceTemplateBuilder({ customerId, invoiceId }: InvoiceTemplateBuilderProps) {
+    const isInvoiceMode = !!invoiceId;
+
+    const { data, isLoading: customerLoading, error } = useInvoiceTemplate(customerId);
+    const { data: invoiceData, isLoading: invoiceLoading } = useInvoice(invoiceId ?? 0);
+    const updateMutation = useUpdateCustomerTemplate();
+    const updateInvoiceTemplateMutation = useUpdateInvoiceTemplate();
+    const resetTemplateMutation = useResetInvoiceTemplate();
     const [components, setComponents] = useState<InvoiceComponentConfig[]>([]);
     const [stampPosition, setStampPosition] = useState<StampPosition | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
     const { user } = useAuth();
     const isSales = user?.role === 'sales';
 
+    const isLoading = isInvoiceMode ? invoiceLoading : customerLoading;
+    const hasError = isInvoiceMode ? false : !!error;
+
     useEffect(() => {
-        if (data?.data) {
+        if (isInvoiceMode && invoiceData?.data) {
+            const inv = invoiceData.data;
+            if (inv.components) setComponents(inv.components as InvoiceComponentConfig[]);
+            if (inv.stamp_position !== undefined) setStampPosition(inv.stamp_position);
+        } else if (!isInvoiceMode && data?.data) {
             if (data.data.components) setComponents(data.data.components);
             if (data.data.stamp_position !== undefined) setStampPosition(data.data.stamp_position);
         }
-    }, [data]);
+    }, [isInvoiceMode, invoiceData, data]);
 
     const handleToggle = (key: InvoiceComponentKey, checked: boolean) => {
         const updated = components.map((comp) => (comp.key === key ? { ...comp, enabled: checked } : comp));
         setComponents(updated);
         const payload = updated.map(({ key: k, enabled }) => ({ key: k, enabled }));
-        updateMutation.mutate(
-            { customerId, data: { components: payload, stamp_position: stampPosition } },
-            {
-                onError: () => {
-                    toast.error('Failed to save');
-                    setComponents((prev) => prev.map((comp) => (comp.key === key ? { ...comp, enabled: !checked } : comp)));
-                },
-            }
-        );
+
+        if (isInvoiceMode && invoiceId) {
+            updateInvoiceTemplateMutation.mutate(
+                { id: invoiceId, data: { components: payload, stamp_position: stampPosition } },
+                {
+                    onError: () => {
+                        toast.error('Failed to save');
+                        setComponents((prev) => prev.map((c) => (c.key === key ? { ...c, enabled: !checked } : c)));
+                    },
+                }
+            );
+        } else {
+            updateMutation.mutate(
+                { customerId, data: { components: payload, stamp_position: stampPosition } },
+                {
+                    onError: () => {
+                        toast.error('Failed to save');
+                        setComponents((prev) => prev.map((c) => (c.key === key ? { ...c, enabled: !checked } : c)));
+                    },
+                }
+            );
+        }
     };
 
     const handleStampPosition = (position: StampPosition) => {
         const newPos = stampPosition === position ? null : position;
         setStampPosition(newPos);
         const payload = components.map(({ key, enabled }) => ({ key, enabled }));
-        updateMutation.mutate(
-            { customerId, data: { components: payload, stamp_position: newPos } },
-            { onError: () => toast.error('Failed to save') }
-        );
+
+        if (isInvoiceMode && invoiceId) {
+            updateInvoiceTemplateMutation.mutate(
+                { id: invoiceId, data: { components: payload, stamp_position: newPos } },
+                { onError: () => toast.error('Failed to save') }
+            );
+        } else {
+            updateMutation.mutate(
+                { customerId, data: { components: payload, stamp_position: newPos } },
+                { onError: () => toast.error('Failed to save') }
+            );
+        }
+    };
+
+    const handleResetTemplate = () => {
+        if (!invoiceId) return;
+        resetTemplateMutation.mutate(invoiceId, {
+            onSuccess: () => {
+                toast.success('Template reset to current company template');
+                setIsResetConfirmOpen(false);
+            },
+            onError: () => toast.error('Failed to reset template'),
+        });
     };
 
     if (isLoading) {
         return <div className="p-4 flex justify-center"><Loader2 className="animate-spin h-6 w-6" /></div>;
     }
 
-    if (error) {
+    if (hasError) {
         return <div className="p-4 text-red-500">Failed to load invoice template</div>;
     }
 
@@ -79,13 +137,39 @@ export function InvoiceTemplateBuilder({ customerId }: InvoiceTemplateBuilderPro
         <Card className="w-full mt-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <div className="space-y-1">
-                    <CardTitle>Invoice Template</CardTitle>
+                    <CardTitle>{isInvoiceMode ? 'Invoice Format' : 'Invoice Template'}</CardTitle>
                     <CardDescription>
-                        Customize the invoice layout for this customer.
+                        {isInvoiceMode
+                            ? 'Override the invoice layout for this specific invoice.'
+                            : 'Customize the invoice layout for this customer.'}
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                    {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {(updateMutation.isPending || updateInvoiceTemplateMutation.isPending || resetTemplateMutation.isPending) && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {isInvoiceMode && !isSales && (
+                        <AlertDialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">Use Current Template</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Reset invoice format?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will replace this invoice&apos;s format with the current company template. This cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleResetTemplate} disabled={resetTemplateMutation.isPending}>
+                                        {resetTemplateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                        Reset
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
                     <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(true)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Preview
