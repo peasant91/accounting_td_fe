@@ -9,7 +9,8 @@ import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
 import { SendInvoiceModal, MarkAsPaidModal, CancelInvoiceModal, InvoicePrintView } from '@/components/invoices';
 import { useInvoicePreview } from '@/lib/hooks/useInvoiceTemplates';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Printer } from 'lucide-react';
+import { InvoiceTemplateBuilder } from '@/components/invoices/InvoiceTemplateBuilder';
 
 interface InvoiceDetailProps {
     invoiceId: number;
@@ -30,6 +31,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
         window.print();
     };
 
+    const [isFormatOpen, setIsFormatOpen] = useState(false);
     const [isSendModalOpen, setIsSendModalOpen] = useState(false);
     const [isMarkPaidModalOpen, setIsMarkPaidModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -270,6 +272,26 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                         )}
                     </div>
                 )}
+
+                {/* Invoice Format — collapsible per-invoice template override */}
+                <div className="border rounded-lg overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setIsFormatOpen((o) => !o)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
+                    >
+                        <span>Invoice Format</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform text-muted-foreground ${isFormatOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isFormatOpen && (
+                        <div className="px-4 pb-4">
+                            <InvoiceTemplateBuilder
+                                customerId={invoice.customer_id}
+                                invoiceId={invoice.id}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
 
@@ -291,6 +313,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                             use_unique_code: invoice.use_unique_code,
                             unique_code: invoice.unique_code,
                             currency: invoice.currency,
+                            external_notes: invoice.external_notes,
                         }}
                     />
                 </div>
