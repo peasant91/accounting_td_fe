@@ -254,12 +254,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 </div>
 
                 {/* Notes */}
-                {(invoice.notes || invoice.internal_notes) && (
+                {(invoice.external_notes || invoice.internal_notes) && (
                     <div className="space-y-4 border-t border-border pt-6">
-                        {invoice.notes && (
+                        {invoice.external_notes && (
                             <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">Internal Notes</h3>
-                                <p className="text-foreground">{invoice.notes}</p>
+                                <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+                                <p className="text-foreground">{invoice.external_notes}</p>
                             </div>
                         )}
                         {invoice.internal_notes && (

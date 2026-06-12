@@ -46,6 +46,7 @@ export function useUpdateInvoice() {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         },
     });
 }
@@ -69,6 +70,7 @@ export function useSendInvoice() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         },
     });
 }
@@ -83,6 +85,7 @@ export function useMarkAsPaid() {
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         },
     });
 }
@@ -97,6 +100,7 @@ export function useCancelInvoice() {
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         },
     });
 }

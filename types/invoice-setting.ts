@@ -9,9 +9,11 @@ export interface InvoiceSetting {
     stamp_url: string | null;
     stamp_position: StampPosition | null;
     default_note: string | null;
+    print_external_notes: boolean;
 }
 
 export interface InvoiceSettingUpdateData {
     stamp_position?: StampPosition | null;
     default_note?: string | null;
+    print_external_notes?: boolean;
 }

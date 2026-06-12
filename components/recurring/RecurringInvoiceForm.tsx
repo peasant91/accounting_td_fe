@@ -30,7 +30,7 @@ interface RecurringFormState {
     due_date_offset: number;
     tax_rate: number;
     currency: string;
-    notes: string;
+    external_notes: string;
     use_unique_code: boolean;
 }
 
@@ -54,7 +54,7 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
         due_date_offset: 0,
         tax_rate: 0,
         currency: 'IDR',
-        notes: '',
+        external_notes: '',
         use_unique_code: false,
     });
 
@@ -79,7 +79,7 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
             due_date_offset: data.due_date_offset || 0,
             tax_rate: Number(data.tax_rate),
             currency: data.currency,
-            notes: data.notes || '',
+            external_notes: data.external_notes || '',
             use_unique_code: data.use_unique_code ?? false,
         });
         setItems(
@@ -372,8 +372,8 @@ export function RecurringInvoiceForm({ id, customerId }: RecurringInvoiceFormPro
             <div className="bg-card rounded-lg border border-border p-6">
                 <Textarea
                     label="Notes"
-                    name="notes"
-                    value={formData.notes}
+                    name="external_notes"
+                    value={formData.external_notes}
                     onChange={handleChange}
                     placeholder="Optional notes…"
                 />

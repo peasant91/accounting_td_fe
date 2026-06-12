@@ -34,7 +34,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
         invoice_date: getTodayString(),
         due_date: '',
         tax_rate: 0,
-        notes: '',
+        external_notes: '',
         internal_notes: '',
         use_unique_code: false,
         order_id: null,
@@ -69,7 +69,7 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
             invoice_date: invoice.invoice_date.split('T')[0],
             due_date: invoice.due_date ? invoice.due_date.split('T')[0] : '',
             tax_rate: Number(invoice.tax_rate),
-            notes: invoice.notes || '',
+            external_notes: invoice.external_notes || '',
             internal_notes: invoice.internal_notes || '',
             use_unique_code: invoice.use_unique_code ?? false,
         });
@@ -109,8 +109,8 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
     }, [isEditMode, contextOrder, formData.order_id]);
 
     useEffect(() => {
-        if (!isEditMode && settingsData?.data?.default_note && !formData.notes) {
-            setFormData((prev) => ({ ...prev, notes: settingsData.data!.default_note! }));
+        if (!isEditMode && settingsData?.data?.default_note && !formData.external_notes) {
+            setFormData((prev) => ({ ...prev, external_notes: settingsData.data!.default_note! }));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [settingsData, isEditMode]);
@@ -404,9 +404,9 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                     <h2 className="text-lg font-semibold text-foreground">Notes</h2>
                     <Textarea
                         label="Internal Notes"
-                        id="notes"
-                        name="notes"
-                        value={formData.notes || ''}
+                        id="external_notes"
+                        name="external_notes"
+                        value={formData.external_notes || ''}
                         onChange={handleChange}
                         placeholder="Add any notes for the customer..."
                     />

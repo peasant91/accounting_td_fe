@@ -25,7 +25,7 @@ export interface RecurringInvoice {
     tax_rate: number;
     currency: string;
     due_date_offset: number;
-    notes: string | null;
+    external_notes: string | null;
     last_generated_at: string | null;
     created_at: string;
     updated_at: string;
@@ -62,7 +62,7 @@ export interface Invoice {
     invoice_type_id: number | null;
     invoice_type: InvoiceTypeRef | null;
     recurring_invoice_id: number | null;
-    notes: string | null;
+    external_notes: string | null;
     internal_notes: string | null;
     cancellation_reason: string | null;
     payment_date: string | null;
@@ -108,7 +108,7 @@ export interface InvoiceFormData {
     invoice_date: string;
     due_date: string | null;
     tax_rate: number;
-    notes?: string;
+    external_notes?: string;
     internal_notes?: string;
     use_unique_code?: boolean;
     items: InvoiceItemFormData[];
