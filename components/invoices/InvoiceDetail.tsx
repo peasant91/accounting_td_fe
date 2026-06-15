@@ -273,7 +273,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     </div>
                 )}
 
-                {/* Invoice Format — collapsible per-invoice template override */}
+                {/* Invoice Format */}
                 <div className="border rounded-lg overflow-hidden">
                     <button
                         type="button"
@@ -284,7 +284,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                         <ChevronDown className={`h-4 w-4 transition-transform text-muted-foreground ${isFormatOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isFormatOpen && (
-                        <div className="px-4 pb-4">
+                        <div className="px-4 py-3">
                             <InvoiceTemplateBuilder
                                 customerId={invoice.customer_id}
                                 invoiceId={invoice.id}
