@@ -11,14 +11,21 @@ import {
 import { useInvoicePreview } from '@/lib/hooks/useInvoiceTemplates';
 import { Loader2 } from 'lucide-react';
 import { InvoicePrintView } from './InvoicePrintView';
+import { InvoiceComponentConfig, StampPosition } from '@/types/invoice-template';
+
+interface TemplateOverride {
+    components: InvoiceComponentConfig[];
+    stamp_position: StampPosition | null;
+}
 
 interface InvoicePreviewModalProps {
     customerId: number;
     isOpen: boolean;
     onClose: () => void;
+    templateOverride?: TemplateOverride;
 }
 
-export function InvoicePreviewModal({ customerId, isOpen, onClose }: InvoicePreviewModalProps) {
+export function InvoicePreviewModal({ customerId, isOpen, onClose, templateOverride }: InvoicePreviewModalProps) {
     const { data, isLoading, error } = useInvoicePreview(customerId, isOpen);
 
     if (!isOpen) return null;
@@ -26,6 +33,12 @@ export function InvoicePreviewModal({ customerId, isOpen, onClose }: InvoicePrev
     const preview = data?.data;
     const sample = preview?.sample_invoice;
     const locale = preview?.locale;
+
+    const effectiveTemplate = preview?.template
+        ? templateOverride
+            ? { ...preview.template, components: templateOverride.components, stamp_position: templateOverride.stamp_position }
+            : preview.template
+        : undefined;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -43,12 +56,12 @@ export function InvoicePreviewModal({ customerId, isOpen, onClose }: InvoicePrev
                     </div>
                 ) : error ? (
                     <div className="p-4 text-red-500">Failed to load preview.</div>
-                ) : sample && locale ? (
+                ) : sample && locale && effectiveTemplate ? (
                     <div className="border border-gray-200 shadow-sm">
                         <InvoicePrintView
-                            template={preview.template}
-                            locale={preview.locale}
-                            invoice={preview.sample_invoice}
+                            template={effectiveTemplate}
+                            locale={locale}
+                            invoice={sample}
                         />
                     </div>
                 ) : null}
