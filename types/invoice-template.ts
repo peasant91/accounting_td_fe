@@ -65,6 +65,7 @@ export interface SampleInvoice {
     }>;
     total: number;
     currency: string;
+    external_notes?: string | null;
     bank_info: {
         bank_name: string;
         swift_code: string;
