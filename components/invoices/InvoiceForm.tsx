@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Autocomplete, Button, Input, Label, LoadingState, Switch, Textarea } from '@/components/ui';
+import { PriceInput } from '@/components/ui/price-input';
 import { useCustomers, useCreateInvoice, useUpdateInvoice, useInvoice, useLineItems, useInvoiceTypes, useOrder } from '@/lib/hooks';
 import { InvoiceFormData } from '@/types';
 import { getTodayString, formatCurrency } from '@/lib/utils';
@@ -336,13 +337,10 @@ export function InvoiceForm({ invoiceId }: InvoiceFormProps) {
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            className="text-right"
+                                        <PriceInput
                                             value={item.unit_price}
-                                            onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                                            onChange={(raw) => updateItem(index, 'unit_price', raw)}
+                                            className="text-right"
                                         />
                                     </div>
                                     <span className="col-span-2 text-right font-medium">

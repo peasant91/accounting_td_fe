@@ -25,6 +25,7 @@ export interface PrintableInvoice {
     use_unique_code?: boolean;
     unique_code?: number;
     currency: string;
+    external_notes?: string | null;
     sender?: {
         company_name: string;
         address: string;
@@ -60,7 +61,7 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
     const emptyRowCount = Math.max(0, EMPTY_ROWS - filledCount);
 
     return (
-        <div className="bg-white text-[11px] text-gray-800 px-10 py-6 font-sans leading-relaxed" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif", WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}>
+        <div className="relative bg-white text-[11px] text-gray-800 px-10 py-6 font-sans leading-relaxed" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif", WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}>
             {isEnabled('company_header') && (
                 <div className="mb-6">
                     <div className="flex items-end justify-between">
@@ -196,6 +197,16 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                 </div>
             )}
 
+            {/* External Notes — always show bordered container when component enabled */}
+            {isEnabled('external_notes') && (
+                <div className="mt-6">
+                    <div className="text-[10px] font-semibold text-gray-700 mb-1.5">Note</div>
+                    <div className="border border-gray-300 rounded px-3 py-2.5 text-[10px] text-gray-700 min-h-[48px]">
+                        {invoice.external_notes ?? ''}
+                    </div>
+                </div>
+            )}
+
             {(isEnabled('bank_transfer') || isEnabled('grand_total') || isEnabled('transfer_fee_note')) && (
                 <div className="border-t-2 border-gray-300 pt-4">
                     {/* Unique code label */}
@@ -278,6 +289,29 @@ export function InvoicePrintView({ template, locale, invoice }: InvoicePrintView
                     </div>
                 </div>
             )}
+
+            {/* Stamp overlay */}
+            {template.stamp_position && (
+                <img
+                    src="/stamp.png"
+                    alt=""
+                    className={`absolute w-[120px] h-[120px] object-contain opacity-85 stamp-${template.stamp_position}`}
+                    style={stampPositionStyle(template.stamp_position)}
+                />
+            )}
         </div>
     );
+}
+
+function stampPositionStyle(position: string): React.CSSProperties {
+    switch (position) {
+        case 'top_left':     return { top: 24, left: 40 };
+        case 'top_right':    return { top: 24, right: 40 };
+        case 'center_left':  return { top: '50%', left: 40, transform: 'translateY(-50%)' };
+        case 'center_right': return { top: '50%', right: 40, transform: 'translateY(-50%)' };
+        case 'center':       return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+        case 'bottom_left':  return { bottom: 24, left: 40 };
+        case 'bottom_right': return { bottom: 24, right: 40 };
+        default:             return {};
+    }
 }
