@@ -116,7 +116,7 @@ export function InvoiceTemplateBuilder({ customerId, invoiceId }: InvoiceTemplat
 
     const handleResetTemplate = () => {
         if (!invoiceId) return;
-        resetTemplateMutation.mutate(invoiceId, {
+        resetTemplateMutation.mutate({ id: invoiceId, customerId }, {
             onSuccess: () => {
                 toast.success('Template reset to current company template');
                 setIsResetConfirmOpen(false);

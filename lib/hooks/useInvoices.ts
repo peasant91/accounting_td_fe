@@ -120,9 +120,10 @@ export function useUpdateInvoiceTemplate() {
 export function useResetInvoiceTemplate() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: number) => invoicesApi.resetTemplate(id),
-        onSuccess: (_, id) => {
+        mutationFn: ({ id }: { id: number; customerId: number }) => invoicesApi.resetTemplate(id),
+        onSuccess: (_, { id, customerId }) => {
             queryClient.invalidateQueries({ queryKey: ['invoices', id] });
+            queryClient.invalidateQueries({ queryKey: ['invoice-template-preview', customerId] });
         },
     });
 }
